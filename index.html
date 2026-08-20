@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111827">
+  <title>SpeechRing</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <main class="app">
+
+    <header>
+      <div class="logo">◉</div>
+
+      <h1>SpeechRing</h1>
+
+      <p class="subtitle">
+        Phone vibration prototype
+      </p>
+    </header>
+
+
+    <section class="card">
+
+      <div class="status">
+        <span id="statusDot" class="dot ready"></span>
+        <span id="status">Ready</span>
+      </div>
+
+      <div id="heard" class="heard">
+        Tap <b>Listen</b> and say a command.
+      </div>
+
+      <button
+        id="listenButton"
+        class="button primary">
+        🎤 Listen
+      </button>
+
+    </section>
+
+
+    <section class="card">
+
+      <h2>Vibration patterns</h2>
+
+      <div class="pattern-grid">
+
+        <button
+          class="button secondary"
+          data-pattern="short">
+          Short
+        </button>
+
+        <button
+          class="button secondary"
+          data-pattern="double">
+          Double
+        </button>
+
+        <button
+          class="button secondary"
+          data-pattern="long">
+          Long
+        </button>
+
+        <button
+          class="button secondary"
+          data-pattern="alert">
+          Alert
+        </button>
+
+      </div>
+
+      <p class="info">
+        These buttons test vibration on the phone running the website.
+      </p>
+
+    </section>
+
+
+    <section class="card">
+
+      <h2>Custom command</h2>
+
+      <div class="command-row">
+
+        <input
+          id="commandInput"
+          type="text"
+          placeholder="Try: vibrate"
+        >
+
+        <button
+          id="sendButton"
+          class="button primary send">
+          Send
+        </button>
+
+      </div>
+
+      <p class="info">
+        Try <b>vibrate</b>, <b>double</b>, <b>long</b>,
+        <b>alert</b>, or <b>stop</b>.
+      </p>
+
+    </section>
+
+
+    <footer>
+      SpeechRing prototype • No hardware required
+    </footer>
+
+  </main>
+
+
+  <script src="script.js"></script>
+
+</body>
+</html>
