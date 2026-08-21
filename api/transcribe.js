@@ -6,11 +6,17 @@ export default async function handler(req, res) {
     }
 
     try {
+        if (!process.env.OPENAI_API_KEY) {
+            return res.status(500).json({
+                error: "OPENAI_API_KEY is missing from Vercel"
+            });
+        }
+
         const { audio } = req.body;
 
         if (!audio) {
             return res.status(400).json({
-                error: "No audio provided"
+                error: "No audio was received"
             });
         }
 
@@ -23,7 +29,9 @@ export default async function handler(req, res) {
 
         const audioBlob = new Blob(
             [audioBuffer],
-            { type: "audio/webm" }
+            {
+                type: "audio/webm"
+            }
         );
 
         formData.append(
@@ -39,52 +47,51 @@ export default async function handler(req, res) {
 
         formData.append(
             "prompt",
-            `Transcribe the speech exactly as spoken.
-
-IMPORTANT:
-- Preserve filler words.
-- Preserve disfluencies.
-- Do NOT remove "um", "uh", "umm", "uhh".
-- Preserve repeated words.
-- Preserve false starts when possible.
-- Do not clean up or summarize the speech.
-- Return only the transcript.`
+            "Transcribe the speech exactly as spoken. Preserve filler words such as um, uh, umm, uhh, like, you know, and repeated words. Do not clean up the speech."
         );
 
-        const response = await fetch(
+        const openAIResponse = await fetch(
             "https://api.openai.com/v1/audio/transcriptions",
             {
                 method: "POST",
 
                 headers: {
                     "Authorization":
-                        `Bearer ${process.env.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}`
+                        `Bearer ${process.env.OPENAI_API_KEY}`
                 },
 
                 body: formData
             }
         );
 
-        if (!response.ok) {
+        const responseText =
+            await openAIResponse.text();
 
-            const errorText =
-                await response.text();
+        console.log(
+            "OpenAI status:",
+            openAIResponse.status
+        );
 
-            console.error(
-                "OpenAI error:",
-                errorText
-            );
+        console.log(
+            "OpenAI response:",
+            responseText
+        );
+
+        if (!openAIResponse.ok) {
 
             return res.status(
-                response.status
+                openAIResponse.status
             ).json({
                 error:
-                    "Transcription failed"
+                    "OpenAI transcription failed",
+                details:
+                    responseText
             });
+
         }
 
         const result =
-            await response.json();
+            JSON.parse(responseText);
 
         return res.status(200).json({
             transcript:
@@ -94,13 +101,15 @@ IMPORTANT:
     } catch (error) {
 
         console.error(
-            "Transcription error:",
+            "SERVER ERROR:",
             error
         );
 
         return res.status(500).json({
             error:
-                "Server transcription error"
+                error.message ||
+                "Unknown server error"
         });
+
     }
 }
