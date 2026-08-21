@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#111827">
 
   <title>Speech Tracker</title>
 
@@ -12,173 +11,186 @@
 
 <body>
 
-  <main class="app">
+<main class="app">
 
-    <header>
-      <div class="logo">◉</div>
+  <header>
+    <div class="logo">◉</div>
 
-      <h1>Speech Tracker</h1>
+    <h1>Speech Tracker</h1>
 
-      <p class="subtitle">
-        Improve your speaking by tracking filler words.
-      </p>
-    </header>
+    <p class="subtitle">
+      Speak naturally. Get smarter feedback.
+    </p>
+  </header>
 
 
-    <!-- =========================
-         SPEECH TRACKER
-    ========================== -->
+  <!-- =========================
+       LIVE SPEECH TRACKER
+  ========================== -->
 
-    <section class="card">
+  <section class="card">
 
-      <div class="status">
-        <span id="statusDot" class="dot ready"></span>
-        <span id="status">Ready</span>
+    <div class="status">
+      <span id="statusDot" class="dot ready"></span>
+      <span id="status">Ready</span>
+    </div>
+
+
+    <div class="stats">
+
+      <div class="stat">
+        <strong id="fillerCount">0</strong>
+        <span>Filler Words</span>
       </div>
 
-
-      <div class="stats">
-
-        <div class="stat">
-          <strong id="fillerCount">0</strong>
-          <span>Tracked Words</span>
-        </div>
-
-        <div class="stat">
-          <strong id="wordCount">0</strong>
-          <span>Total Words</span>
-        </div>
-
+      <div class="stat">
+        <strong id="wordCount">0</strong>
+        <span>Total Words</span>
       </div>
 
-
-      <div
-        id="heard"
-        class="transcript"
-        aria-live="polite">
-
-        Your speech will appear here.
-
-      </div>
+    </div>
 
 
-      <div class="button-row">
+    <div
+      id="heard"
+      class="transcript">
 
-        <button
-          id="listenButton"
-          class="button primary">
+      Your speech will appear here.
 
-          🎤 Start Listening
-
-        </button>
+    </div>
 
 
-        <button
-          id="stopButton"
-          class="button secondary"
-          disabled>
-
-          ■ Stop
-
-        </button>
-
-      </div>
-
-    </section>
-
-
-    <!-- =========================
-         CUSTOM WORDS
-    ========================== -->
-
-    <section class="card">
-
-      <h2>Words to Track</h2>
-
-      <p class="info">
-        Add filler words or any other words you want Speech Tracker
-        to detect.
-      </p>
-
-
-      <div class="command-row">
-
-        <input
-          id="customWordInput"
-          type="text"
-          placeholder="Example: basically"
-          autocomplete="off"
-        >
-
-
-        <button
-          id="addWordButton"
-          class="button primary">
-
-          Add
-
-        </button>
-
-      </div>
-
-
-      <div
-        id="wordList"
-        class="word-list">
-
-      </div>
-
+    <div class="button-row">
 
       <button
-        id="resetWordsButton"
-        class="text-button">
+        id="listenButton"
+        class="button primary">
 
-        Reset default words
+        🎤 Start Speaking
 
       </button>
 
-    </section>
+
+      <button
+        id="stopButton"
+        class="button secondary"
+        disabled>
+
+        ■ Stop
+
+      </button>
+
+    </div>
+
+  </section>
 
 
-    <!-- =========================
-         INFORMATION
-    ========================== -->
+  <!-- =========================
+       CUSTOM WORDS
+  ========================== -->
 
-    <section class="card">
+  <section class="card">
 
-      <h2>How it works</h2>
+    <h2>Words to Track</h2>
+
+    <p class="info">
+      Add words that you want Speech Tracker
+      to detect.
+    </p>
+
+
+    <div class="command-row">
+
+      <input
+        id="customWordInput"
+        type="text"
+        placeholder="Example: basically"
+      >
+
+      <button
+        id="addWordButton"
+        class="button primary">
+
+        Add
+
+      </button>
+
+    </div>
+
+
+    <div
+      id="wordList"
+      class="word-list">
+    </div>
+
+
+    <button
+      id="resetWordsButton"
+      class="text-button">
+
+      Reset defaults
+
+    </button>
+
+  </section>
+
+
+  <!-- =========================
+       AI ANALYSIS
+  ========================== -->
+
+  <section class="card">
+
+    <h2>🤖 AI Speech Analysis</h2>
+
+    <p class="info">
+      When you're finished speaking, AI can analyze
+      your speech and give you personalized feedback.
+    </p>
+
+
+    <button
+      id="analyzeButton"
+      class="button primary"
+      disabled>
+
+      Analyze My Speech
+
+    </button>
+
+
+    <div
+      id="analysisLoading"
+      class="analysis-loading"
+      hidden>
+
+      🤖 Analyzing your speech...
+
+    </div>
+
+
+    <div
+      id="analysis"
+      class="analysis">
 
       <p class="info">
-
-        Speech Tracker listens to your microphone, transcribes
-        your speech, and highlights the words you choose to track.
-
+        Your AI analysis will appear here after you
+        finish speaking.
       </p>
 
-      <p class="info">
+    </div>
 
-        <strong>Important:</strong>
-        Some browser speech-recognition systems automatically
-        remove sounds such as "um" and "uh" from their transcript.
-        If that happens, the browser is filtering them before
-        this website receives the text.
-
-      </p>
-
-    </section>
+  </section>
 
 
-    <footer>
+  <footer>
+    Speech Tracker • AI-powered speaking coach
+  </footer>
 
-      Speech Tracker • Browser-based speech analysis
-
-    </footer>
-
-  </main>
+</main>
 
 
-  <script src="script.js"></script>
+<script src="script.js"></script>
 
 </body>
-
 </html>
