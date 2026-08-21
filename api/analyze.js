@@ -7,7 +7,6 @@ const client = new OpenAI({
 export default async function handler(req, res) {
 
     if (req.method !== "POST") {
-
         return res.status(405).json({
             error: "Method not allowed"
         });
@@ -15,84 +14,91 @@ export default async function handler(req, res) {
 
     try {
 
-        const {
-            transcript,
-            trackedWords
-        } = req.body || {};
-
-        if (
-            !transcript ||
-            !transcript.trim()
-        ) {
-
-            return res.status(400).json({
-                error: "No transcript was provided."
+        if (!process.env.OPENAI_API_KEY) {
+            return res.status(500).json({
+                error: "OPENAI_API_KEY is missing"
             });
         }
 
-        const words =
-            Array.isArray(trackedWords)
-                ? trackedWords
+        const body = req.body || {};
+
+        const transcript =
+            typeof body.transcript === "string"
+                ? body.transcript.trim()
+                : "";
+
+        const trackedWords =
+            Array.isArray(body.trackedWords)
+                ? body.trackedWords
                 : [];
 
-        const fillerList =
-            words.join(", ");
+        if (!transcript) {
+            return res.status(400).json({
+                error: "Transcript is empty"
+            });
+        }
+
+        const fillerWords =
+            trackedWords.join(", ");
 
         const prompt = `
-You are an expert public speaking coach.
+You are a public speaking coach.
 
-Analyze this person's speech transcript.
+Analyze the following speech transcript.
 
 Tracked words:
-${fillerList || "None"}
+${fillerWords}
 
-Transcript:
-"""
+Speech transcript:
 ${transcript}
-"""
 
-Give useful, encouraging feedback.
+Give concise, useful feedback.
 
-Include exactly these sections:
+Use these sections:
 
-1. Overall Score
-Give a score from 1-10.
+OVERALL SCORE
+Give a score from 1 to 10.
 
-2. What You Did Well
-Mention 2-3 specific strengths.
+WHAT YOU DID WELL
+Give 2 specific strengths.
 
-3. Filler Words
-Explain how often the tracked words appeared and which ones appeared most.
+FILLER WORDS
+Identify the tracked filler words that appeared and comment on them.
 
-4. Clarity
+CLARITY
 Comment on how clear and easy to follow the speech was.
 
-5. How to Improve
-Give 3 specific things the speaker can practice.
+HOW TO IMPROVE
+Give 3 practical suggestions.
 
-6. Quick Challenge
-Give one short exercise they can do next.
+NEXT CHALLENGE
+Give one short speaking exercise.
 
-Do not invent facts that aren't supported by the transcript.
-Keep the feedback concise and practical.
+Only use information supported by the transcript.
 `;
 
-        const response =
-            await client.responses.create({
-                model: "gpt-5.6",
-                input: prompt
-            });
+        console.log("Sending analysis request...");
 
-        const analysis =
-            response.output_text?.trim();
+        const response = await client.responses.create({
+            model: "gpt-5.6",
+            input: prompt
+        });
 
         console.log(
-            "Analysis response:",
-            analysis
+            "OpenAI response received."
+        );
+
+        const analysis =
+            response.output_text
+                ? response.output_text.trim()
+                : "";
+
+        console.log(
+            "Analysis length:",
+            analysis.length
         );
 
         if (!analysis) {
-
             return res.status(502).json({
                 error:
                     "OpenAI returned an empty analysis."
@@ -100,20 +106,20 @@ Keep the feedback concise and practical.
         }
 
         return res.status(200).json({
-            analysis
+            analysis: analysis
         });
 
     } catch (error) {
 
         console.error(
-            "ANALYSIS API ERROR:",
+            "ANALYSIS ERROR:",
             error
         );
 
         return res.status(500).json({
             error:
-                error.message ||
-                "Speech analysis failed."
+                error?.message ||
+                "Analysis request failed."
         });
     }
 }
