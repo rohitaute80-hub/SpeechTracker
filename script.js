@@ -1,22 +1,16 @@
 // ==========================================
 // SPEECH TRACKER
-// Stable MVP version
-// Microphone → Live Browser Transcript
-// → Final OpenAI Transcript
-// → Filler Detection → Vibration
-// ==========================================
-
-
-// ==========================================
-// ELEMENTS
 // ==========================================
 
 const statusText = document.getElementById("status");
 const statusDot = document.getElementById("statusDot");
 const heardText = document.getElementById("heard");
 
-const listenButton = document.getElementById("listenButton");
-const stopButton = document.getElementById("stopButton");
+const listenButton =
+    document.getElementById("listenButton");
+
+const stopButton =
+    document.getElementById("stopButton");
 
 const customWordInput =
     document.getElementById("customWordInput");
@@ -39,11 +33,11 @@ const wordCountElement =
 const analyzeButton =
     document.getElementById("analyzeButton");
 
-const analysisElement =
-    document.getElementById("analysis");
-
 const analysisLoading =
     document.getElementById("analysisLoading");
+
+const analysisElement =
+    document.getElementById("analysis");
 
 
 // ==========================================
@@ -64,28 +58,34 @@ const DEFAULT_WORDS = [
 
 
 // ==========================================
-// LOAD WORDS
+// TRACKED WORDS
 // ==========================================
 
 let trackedWords = [];
 
 try {
     const saved =
-        localStorage.getItem("speechTrackerWords");
+        localStorage.getItem(
+            "speechTrackerWords"
+        );
 
     if (saved) {
-        const parsed = JSON.parse(saved);
+        const parsed =
+            JSON.parse(saved);
 
         if (Array.isArray(parsed)) {
             trackedWords = parsed;
         }
     }
 } catch (error) {
-    console.log("Could not load saved words.");
+    console.log(
+        "Could not load saved words."
+    );
 }
 
 if (trackedWords.length === 0) {
-    trackedWords = [...DEFAULT_WORDS];
+    trackedWords =
+        [...DEFAULT_WORDS];
 }
 
 
@@ -103,27 +103,28 @@ let isProcessing = false;
 let finalTranscript = "";
 let liveTranscript = "";
 
-let fillerCount = 0;
-let totalWords = 0;
-
 let recognition = null;
 let recognitionSupported = false;
 
-let alreadyVibratedIndexes = new Set();
+let vibratedOccurrences = new Set();
 
 
 // ==========================================
 // STATUS
 // ==========================================
 
-function setStatus(message, state = "ready") {
-
+function setStatus(
+    message,
+    state = "ready"
+) {
     if (statusText) {
-        statusText.textContent = message;
+        statusText.textContent =
+            message;
     }
 
     if (statusDot) {
-        statusDot.className = "dot " + state;
+        statusDot.className =
+            "dot " + state;
     }
 }
 
@@ -133,9 +134,9 @@ function setStatus(message, state = "ready") {
 // ==========================================
 
 function showMessage(message) {
-
     if (heardText) {
-        heardText.textContent = message;
+        heardText.textContent =
+            message;
     }
 }
 
@@ -145,14 +146,17 @@ function showMessage(message) {
 // ==========================================
 
 function saveWords() {
-
     try {
         localStorage.setItem(
             "speechTrackerWords",
-            JSON.stringify(trackedWords)
+            JSON.stringify(
+                trackedWords
+            )
         );
     } catch (error) {
-        console.log("Could not save words.");
+        console.log(
+            "Could not save words."
+        );
     }
 }
 
@@ -162,7 +166,6 @@ function saveWords() {
 // ==========================================
 
 function escapeHTML(text) {
-
     const div =
         document.createElement("div");
 
@@ -177,7 +180,6 @@ function escapeHTML(text) {
 // ==========================================
 
 function escapeRegex(text) {
-
     return text.replace(
         /[.*+?^${}()|[\]\\]/g,
         "\\$&"
@@ -186,7 +188,7 @@ function escapeRegex(text) {
 
 
 // ==========================================
-// RENDER WORDS
+// RENDER WORD LIST
 // ==========================================
 
 function renderWords() {
@@ -197,38 +199,53 @@ function renderWords() {
 
     wordList.innerHTML = "";
 
-    trackedWords.forEach((word, index) => {
+    trackedWords.forEach(
+        (word, index) => {
 
-        const tag =
-            document.createElement("div");
+            const tag =
+                document.createElement(
+                    "div"
+                );
 
-        tag.className = "word-tag";
+            tag.className =
+                "word-tag";
 
-        const text =
-            document.createElement("span");
+            const text =
+                document.createElement(
+                    "span"
+                );
 
-        text.textContent = word;
+            text.textContent =
+                word;
 
-        const remove =
-            document.createElement("button");
+            const remove =
+                document.createElement(
+                    "button"
+                );
 
-        remove.type = "button";
-        remove.textContent = "×";
+            remove.type = "button";
+            remove.textContent = "×";
 
-        remove.addEventListener("click", () => {
+            remove.addEventListener(
+                "click",
+                () => {
 
-            trackedWords.splice(index, 1);
+                    trackedWords.splice(
+                        index,
+                        1
+                    );
 
-            saveWords();
+                    saveWords();
+                    renderWords();
+                }
+            );
 
-            renderWords();
-        });
+            tag.appendChild(text);
+            tag.appendChild(remove);
 
-        tag.appendChild(text);
-        tag.appendChild(remove);
-
-        wordList.appendChild(tag);
-    });
+            wordList.appendChild(tag);
+        }
+    );
 }
 
 
@@ -251,22 +268,19 @@ function addCustomWord() {
         return;
     }
 
-    if (!trackedWords.includes(word)) {
+    if (
+        !trackedWords.includes(word)
+    ) {
 
         trackedWords.push(word);
 
         saveWords();
-
         renderWords();
     }
 
     customWordInput.value = "";
 }
 
-
-// ==========================================
-// CUSTOM WORD BUTTON
-// ==========================================
 
 if (addWordButton) {
 
@@ -277,17 +291,15 @@ if (addWordButton) {
 }
 
 
-// ==========================================
-// ENTER TO ADD WORD
-// ==========================================
-
 if (customWordInput) {
 
     customWordInput.addEventListener(
         "keydown",
         (event) => {
 
-            if (event.key === "Enter") {
+            if (
+                event.key === "Enter"
+            ) {
 
                 event.preventDefault();
 
@@ -297,10 +309,6 @@ if (customWordInput) {
     );
 }
 
-
-// ==========================================
-// RESET WORDS
-// ==========================================
 
 if (resetWordsButton) {
 
@@ -312,7 +320,6 @@ if (resetWordsButton) {
                 [...DEFAULT_WORDS];
 
             saveWords();
-
             renderWords();
         }
     );
@@ -320,40 +327,47 @@ if (resetWordsButton) {
 
 
 // ==========================================
-// HIGHLIGHT WORDS
+// HIGHLIGHT TRACKED WORDS
 // ==========================================
 
 function highlightTrackedWords(text) {
+
+    if (!text) {
+        return "";
+    }
 
     let result =
         escapeHTML(text);
 
     const sortedWords =
         [...trackedWords].sort(
-            (a, b) => b.length - a.length
+            (a, b) =>
+                b.length - a.length
         );
 
-    sortedWords.forEach((word) => {
+    sortedWords.forEach(
+        (word) => {
 
-        const escapedWord =
-            escapeRegex(
-                escapeHTML(word)
-            );
+            const escaped =
+                escapeRegex(
+                    escapeHTML(word)
+                );
 
-        const regex =
-            new RegExp(
-                "(^|\\s)(" +
-                escapedWord +
-                ")(?=\\s|[.,!?;:]|$)",
-                "gi"
-            );
+            const regex =
+                new RegExp(
+                    "(^|\\s)(" +
+                    escaped +
+                    ")(?=\\s|[.,!?;:]|$)",
+                    "gi"
+                );
 
-        result =
-            result.replace(
-                regex,
-                '$1<span class="highlight">$2</span>'
-            );
-    });
+            result =
+                result.replace(
+                    regex,
+                    '$1<span class="highlight">$2</span>'
+                );
+        }
+    );
 
     return result;
 }
@@ -367,23 +381,26 @@ function countTrackedWords(text) {
 
     let count = 0;
 
-    trackedWords.forEach((word) => {
+    trackedWords.forEach(
+        (word) => {
 
-        const regex =
-            new RegExp(
-                "\\b" +
-                escapeRegex(word) +
-                "\\b",
-                "gi"
-            );
+            const regex =
+                new RegExp(
+                    "\\b" +
+                    escapeRegex(word) +
+                    "\\b",
+                    "gi"
+                );
 
-        const matches =
-            text.match(regex);
+            const matches =
+                text.match(regex);
 
-        if (matches) {
-            count += matches.length;
+            if (matches) {
+                count +=
+                    matches.length;
+            }
         }
-    });
+    );
 
     return count;
 }
@@ -395,7 +412,7 @@ function countTrackedWords(text) {
 
 function countTotalWords(text) {
 
-    if (!text.trim()) {
+    if (!text || !text.trim()) {
         return 0;
     }
 
@@ -407,38 +424,59 @@ function countTotalWords(text) {
 
 
 // ==========================================
-// DISPLAY TRANSCRIPT
+// UPDATE LIVE UI
 // ==========================================
 
-function displayTranscript(text) {
+function updateTranscriptUI(text) {
 
-    finalTranscript = text || "";
+    if (!text) {
+        return;
+    }
 
-    fillerCount =
-        countTrackedWords(finalTranscript);
-
-    totalWords =
-        countTotalWords(finalTranscript);
+    liveTranscript =
+        text.trim();
 
     if (heardText) {
 
         heardText.innerHTML =
             highlightTrackedWords(
-                finalTranscript
+                liveTranscript
             );
     }
 
     if (fillerCountElement) {
 
         fillerCountElement.textContent =
-            fillerCount;
+            countTrackedWords(
+                liveTranscript
+            );
     }
 
     if (wordCountElement) {
 
         wordCountElement.textContent =
-            totalWords;
+            countTotalWords(
+                liveTranscript
+            );
     }
+}
+
+
+// ==========================================
+// FINAL TRANSCRIPT UI
+// ==========================================
+
+function displayTranscript(text) {
+
+    finalTranscript =
+        text || "";
+
+    liveTranscript =
+        finalTranscript;
+
+    updateTranscriptUI(
+        finalTranscript
+    );
 
     if (analyzeButton) {
 
@@ -449,109 +487,221 @@ function displayTranscript(text) {
 
 
 // ==========================================
-// LIVE TRANSCRIPT DISPLAY
+// NOTIFICATION
 // ==========================================
 
-function displayLiveTranscript(text) {
+function showFillerNotification(word) {
 
-    liveTranscript = text || "";
+    // ==================================
+    // 1. IN-APP ALERT
+    // ==================================
 
-    if (!heardText) {
-        return;
-    }
-
-    heardText.innerHTML =
-        highlightTrackedWords(
-            liveTranscript
+    let alert =
+        document.getElementById(
+            "fillerAlert"
         );
 
-    const count =
-        countTrackedWords(liveTranscript);
+    if (!alert) {
 
-    const words =
-        countTotalWords(liveTranscript);
+        alert =
+            document.createElement(
+                "div"
+            );
 
-    if (fillerCountElement) {
-        fillerCountElement.textContent = count;
+        alert.id =
+            "fillerAlert";
+
+        alert.style.position =
+            "fixed";
+
+        alert.style.left = "16px";
+        alert.style.right = "16px";
+        alert.style.bottom = "24px";
+
+        alert.style.zIndex = "99999";
+
+        alert.style.padding =
+            "16px 18px";
+
+        alert.style.borderRadius =
+            "16px";
+
+        alert.style.background =
+            "#111827";
+
+        alert.style.color =
+            "white";
+
+        alert.style.fontWeight =
+            "700";
+
+        alert.style.fontSize =
+            "16px";
+
+        alert.style.textAlign =
+            "center";
+
+        alert.style.boxShadow =
+            "0 8px 30px rgba(0,0,0,.25)";
+
+        document.body.appendChild(
+            alert
+        );
     }
 
-    if (wordCountElement) {
-        wordCountElement.textContent = words;
+    alert.textContent =
+        "⚠️ Tracked word: " + word;
+
+    alert.style.display =
+        "block";
+
+
+    clearTimeout(
+        window.fillerAlertTimeout
+    );
+
+    window.fillerAlertTimeout =
+        setTimeout(
+            () => {
+
+                alert.style.display =
+                    "none";
+
+            },
+            1200
+        );
+
+
+    // ==================================
+    // 2. VIBRATION
+    // ==================================
+
+    if (
+        typeof navigator.vibrate ===
+        "function"
+    ) {
+
+        try {
+            navigator.vibrate(
+                [150]
+            );
+        } catch (error) {
+            console.log(
+                "Vibration unavailable."
+            );
+        }
+    }
+
+
+    // ==================================
+    // 3. BROWSER NOTIFICATION
+    // ==================================
+
+    if (
+        "Notification" in window &&
+        Notification.permission ===
+            "granted"
+    ) {
+
+        try {
+
+            new Notification(
+                "Speech Tracker",
+                {
+                    body:
+                        `You said "${word}"`,
+                    tag:
+                        "speech-tracker-" +
+                        Date.now()
+                }
+            );
+
+        } catch (error) {
+
+            console.log(
+                "Browser notification unavailable."
+            );
+        }
     }
 }
 
 
 // ==========================================
-// VIBRATION
+// REQUEST NOTIFICATION PERMISSION
 // ==========================================
 
-function vibrate() {
+async function requestNotificationPermission() {
 
     if (
-        typeof navigator.vibrate !==
-        "function"
+        !("Notification" in window)
     ) {
         return;
     }
 
-    try {
-        navigator.vibrate(150);
-    } catch (error) {
-        console.log("Vibration unavailable.");
+    if (
+        Notification.permission ===
+        "default"
+    ) {
+
+        try {
+
+            await Notification.requestPermission();
+
+        } catch (error) {
+
+            console.log(
+                "Notification permission unavailable."
+            );
+        }
     }
 }
 
 
 // ==========================================
-// FIND TRACKED WORDS
+// FIND NEW FILLER WORDS
 // ==========================================
 
-function findTrackedWords(text) {
+function checkForTrackedWords(text) {
 
     const matches = [];
 
-    trackedWords.forEach((word) => {
+    trackedWords.forEach(
+        (word) => {
 
-        const regex =
-            new RegExp(
-                "\\b" +
-                escapeRegex(word) +
-                "\\b",
-                "gi"
-            );
+            const regex =
+                new RegExp(
+                    "\\b" +
+                    escapeRegex(word) +
+                    "\\b",
+                    "gi"
+                );
 
-        let match;
+            let match;
 
-        while (
-            (match = regex.exec(text)) !== null
-        ) {
+            while (
+                (match =
+                    regex.exec(text)) !==
+                null
+            ) {
 
-            matches.push({
-                word: word,
-                index: match.index
-            });
+                matches.push({
+                    word: word,
+                    index: match.index
+                });
+            }
         }
-    });
+    );
+
 
     matches.sort(
         (a, b) =>
             a.index - b.index
     );
 
-    return matches;
-}
 
-
-// ==========================================
-// VIBRATE ONLY FOR NEW WORDS
-// ==========================================
-
-function checkForNewTrackedWords(text) {
-
-    const matches =
-        findTrackedWords(text);
-
-    for (const match of matches) {
+    for (
+        const match of matches
+    ) {
 
         const key =
             match.word +
@@ -559,33 +709,26 @@ function checkForNewTrackedWords(text) {
             match.index;
 
         if (
-            alreadyVibratedIndexes.has(key)
+            vibratedOccurrences.has(
+                key
+            )
         ) {
             continue;
         }
 
-        alreadyVibratedIndexes.add(key);
+        vibratedOccurrences.add(
+            key
+        );
 
-        vibrate();
+        showFillerNotification(
+            match.word
+        );
     }
 }
 
 
 // ==========================================
-// MICROPHONE SUPPORT
-// ==========================================
-
-function checkMicrophoneSupport() {
-
-    return !!(
-        navigator.mediaDevices &&
-        navigator.mediaDevices.getUserMedia
-    );
-}
-
-
-// ==========================================
-// LIVE SPEECH RECOGNITION
+// SPEECH RECOGNITION
 // ==========================================
 
 function setupSpeechRecognition() {
@@ -594,91 +737,110 @@ function setupSpeechRecognition() {
         window.SpeechRecognition ||
         window.webkitSpeechRecognition;
 
+
     if (!SpeechRecognition) {
 
-        recognitionSupported = false;
-
         console.log(
-            "Live speech recognition unavailable."
+            "Speech recognition is not supported."
         );
+
+        recognitionSupported =
+            false;
 
         return;
     }
 
-    recognitionSupported = true;
+
+    recognitionSupported =
+        true;
+
 
     recognition =
         new SpeechRecognition();
 
-    recognition.continuous = true;
 
-    recognition.interimResults = true;
+    recognition.continuous =
+        true;
 
-    recognition.lang = "en-US";
+    recognition.interimResults =
+        true;
 
-    recognition.maxAlternatives = 1;
+    recognition.lang =
+        "en-US";
 
-
-    recognition.onresult = (event) => {
-
-        let transcript = "";
-
-        for (
-            let i = 0;
-            i < event.results.length;
-            i++
-        ) {
-
-            transcript +=
-                event.results[i][0].transcript +
-                " ";
-        }
-
-        transcript =
-            transcript.trim();
-
-        displayLiveTranscript(
-            transcript
-        );
-
-        checkForNewTrackedWords(
-            transcript
-        );
-    };
+    recognition.maxAlternatives =
+        1;
 
 
-    recognition.onerror = (event) => {
+    recognition.onresult =
+        (event) => {
 
-        console.log(
-            "Speech recognition:",
-            event.error
-        );
+            let transcript = "";
 
-        // Don't kill the recording
-        // because browser speech recognition
-        // is only being used for live display.
-    };
+            // Rebuild the entire current
+            // transcript every time.
 
+            for (
+                let i = 0;
+                i < event.results.length;
+                i++
+            ) {
 
-    recognition.onend = () => {
-
-        // Automatically restart if
-        // microphone recording is still active.
-
-        if (isRecording) {
-
-            try {
-                recognition.start();
-            } catch (error) {
-                // Already running.
+                transcript +=
+                    event.results[i][0]
+                        .transcript +
+                    " ";
             }
-        }
-    };
+
+
+            transcript =
+                transcript.trim();
+
+
+            // SHOW LIVE TEXT
+            updateTranscriptUI(
+                transcript
+            );
+
+
+            // DETECT WORDS IMMEDIATELY
+            checkForTrackedWords(
+                transcript
+            );
+        };
+
+
+    recognition.onerror =
+        (event) => {
+
+            console.log(
+                "Speech recognition error:",
+                event.error
+            );
+        };
+
+
+    recognition.onend =
+        () => {
+
+            if (isRecording) {
+
+                try {
+
+                    recognition.start();
+
+                } catch (error) {
+
+                    // Recognition was
+                    // already running.
+                }
+            }
+        };
 }
 
 
 // ==========================================
-// START LIVE TRANSCRIPTION
+// START LIVE RECOGNITION
 // ==========================================
 
 function startLiveRecognition() {
@@ -697,14 +859,14 @@ function startLiveRecognition() {
     } catch (error) {
 
         console.log(
-            "Recognition already running."
+            "Recognition already started."
         );
     }
 }
 
 
 // ==========================================
-// STOP LIVE TRANSCRIPTION
+// STOP LIVE RECOGNITION
 // ==========================================
 
 function stopLiveRecognition() {
@@ -714,12 +876,28 @@ function stopLiveRecognition() {
     }
 
     try {
+
         recognition.stop();
+
     } catch (error) {
+
         console.log(
             "Recognition already stopped."
         );
     }
+}
+
+
+// ==========================================
+// MICROPHONE SUPPORT
+// ==========================================
+
+function microphoneSupported() {
+
+    return !!(
+        navigator.mediaDevices &&
+        navigator.mediaDevices.getUserMedia
+    );
 }
 
 
@@ -736,7 +914,8 @@ async function startRecording() {
         return;
     }
 
-    if (!checkMicrophoneSupport()) {
+
+    if (!microphoneSupported()) {
 
         setStatus(
             "Microphone unavailable",
@@ -750,11 +929,15 @@ async function startRecording() {
         return;
     }
 
+
     try {
 
-        console.log(
-            "Requesting microphone..."
-        );
+        // Ask for notification permission
+        // while the user has just tapped
+        // Listen.
+
+        await requestNotificationPermission();
+
 
         audioStream =
             await navigator
@@ -766,15 +949,13 @@ async function startRecording() {
 
         audioChunks = [];
 
-        alreadyVibratedIndexes =
+
+        vibratedOccurrences =
             new Set();
 
 
-        // ==================================
-        // CHOOSE RECORDING FORMAT
-        // ==================================
-
         let mimeType = "";
+
 
         if (
             MediaRecorder.isTypeSupported(
@@ -805,10 +986,6 @@ async function startRecording() {
         }
 
 
-        // ==================================
-        // CREATE RECORDER
-        // ==================================
-
         if (mimeType) {
 
             mediaRecorder =
@@ -829,10 +1006,6 @@ async function startRecording() {
         }
 
 
-        // ==================================
-        // AUDIO CHUNKS
-        // ==================================
-
         mediaRecorder.ondataavailable =
             (event) => {
 
@@ -848,19 +1021,11 @@ async function startRecording() {
             };
 
 
-        // ==================================
-        // RECORDER STOP
-        // ==================================
-
         mediaRecorder.onstop =
             () => {
 
-                console.log(
-                    "MediaRecorder stopped."
-                );
-
-                // Don't block the UI.
-                // Let sendRecording run separately.
+                // Let the UI update before
+                // processing the recording.
 
                 setTimeout(
                     () => {
@@ -871,31 +1036,32 @@ async function startRecording() {
             };
 
 
-        // ==================================
-        // START
-        // ==================================
+        mediaRecorder.start(
+            1000
+        );
 
-        mediaRecorder.start(1000);
 
-        isRecording = true;
+        isRecording =
+            true;
 
-        listenButton.disabled = true;
 
-        stopButton.disabled = false;
+        listenButton.disabled =
+            true;
+
+        stopButton.disabled =
+            false;
+
 
         setStatus(
             "Listening...",
             "listening"
         );
 
+
         showMessage(
             "🎤 Listening... start speaking."
         );
 
-
-        // ==================================
-        // START LIVE RECOGNITION
-        // ==================================
 
         startLiveRecognition();
 
@@ -903,31 +1069,38 @@ async function startRecording() {
     } catch (error) {
 
         console.error(
-            "MICROPHONE ERROR:",
+            "START ERROR:",
             error
         );
+
 
         if (audioStream) {
 
             audioStream
                 .getTracks()
                 .forEach(
-                    track => track.stop()
+                    track =>
+                        track.stop()
                 );
         }
+
 
         audioStream = null;
 
         isRecording = false;
 
-        listenButton.disabled = false;
+        listenButton.disabled =
+            false;
 
-        stopButton.disabled = true;
+        stopButton.disabled =
+            true;
+
 
         setStatus(
             "Microphone error",
             "error"
         );
+
 
         showMessage(
             "Microphone error: " +
@@ -943,31 +1116,29 @@ async function startRecording() {
 
 function stopRecording() {
 
-    // IMPORTANT:
-    // Update the UI immediately.
-    // This makes the button feel instant.
-
     if (!isRecording) {
         return;
     }
 
-    console.log(
-        "STOP BUTTON PRESSED"
-    );
+
+    // IMPORTANT:
+    // Change UI FIRST.
+
+    isRecording =
+        false;
+
+    isProcessing =
+        true;
 
 
-    isRecording = false;
-
-    isProcessing = true;
+    stopLiveRecognition();
 
 
-    // ==================================
-    // IMMEDIATELY UPDATE BUTTONS
-    // ==================================
+    listenButton.disabled =
+        true;
 
-    listenButton.disabled = true;
-
-    stopButton.disabled = true;
+    stopButton.disabled =
+        true;
 
 
     setStatus(
@@ -975,25 +1146,16 @@ function stopRecording() {
         "listening"
     );
 
+
     showMessage(
         "⏹ Stopping recording..."
     );
 
 
-    // ==================================
-    // STOP LIVE RECOGNITION
-    // ==================================
-
-    stopLiveRecognition();
-
-
-    // ==================================
-    // STOP RECORDER
-    // ==================================
-
     if (
         mediaRecorder &&
-        mediaRecorder.state !== "inactive"
+        mediaRecorder.state !==
+            "inactive"
     ) {
 
         try {
@@ -1003,38 +1165,34 @@ function stopRecording() {
         } catch (error) {
 
             console.error(
-                "Recorder stop error:",
+                "Stop error:",
                 error
             );
         }
 
     } else {
 
-        // Safety fallback
-
         sendRecording();
     }
 
-
-    // ==================================
-    // STOP MICROPHONE
-    // ==================================
 
     if (audioStream) {
 
         audioStream
             .getTracks()
             .forEach(
-                track => track.stop()
+                track =>
+                    track.stop()
             );
 
-        audioStream = null;
+        audioStream =
+            null;
     }
 }
 
 
 // ==========================================
-// LISTEN BUTTON
+// BUTTONS
 // ==========================================
 
 if (listenButton) {
@@ -1046,10 +1204,6 @@ if (listenButton) {
 }
 
 
-// ==========================================
-// STOP BUTTON
-// ==========================================
-
 if (stopButton) {
 
     stopButton.addEventListener(
@@ -1060,7 +1214,87 @@ if (stopButton) {
 
 
 // ==========================================
-// SEND RECORDING
+// BLOB → BASE64
+// ==========================================
+
+function blobToBase64(blob) {
+
+    return new Promise(
+        (resolve, reject) => {
+
+            const reader =
+                new FileReader();
+
+
+            reader.onloadend =
+                () => {
+
+                    const result =
+                        reader.result;
+
+
+                    if (
+                        typeof result !==
+                        "string"
+                    ) {
+
+                        reject(
+                            new Error(
+                                "Could not convert audio."
+                            )
+                        );
+
+                        return;
+                    }
+
+
+                    const comma =
+                        result.indexOf(",");
+
+
+                    if (
+                        comma === -1
+                    ) {
+
+                        reject(
+                            new Error(
+                                "Invalid audio data."
+                            )
+                        );
+
+                        return;
+                    }
+
+
+                    resolve(
+                        result.substring(
+                            comma + 1
+                        )
+                    );
+                };
+
+
+            reader.onerror =
+                () => {
+
+                    reject(
+                        new Error(
+                            "Could not read audio."
+                        )
+                    );
+                };
+
+
+            reader.readAsDataURL(
+                blob
+            );
+        }
+    );
+}
+
+
+// ==========================================
+// SEND RECORDING TO OPENAI
 // ==========================================
 
 async function sendRecording() {
@@ -1077,10 +1311,6 @@ async function sendRecording() {
         }
 
 
-        // ==================================
-        // CREATE BLOB
-        // ==================================
-
         const audioBlob =
             new Blob(
                 audioChunks,
@@ -1092,19 +1322,6 @@ async function sendRecording() {
             );
 
 
-        console.log(
-            "Audio size:",
-            Math.round(
-                audioBlob.size / 1024
-            ),
-            "KB"
-        );
-
-
-        // ==================================
-        // RELEASE CHUNKS
-        // ==================================
-
         audioChunks = [];
 
 
@@ -1113,25 +1330,17 @@ async function sendRecording() {
             "listening"
         );
 
+
         showMessage(
             "🤖 AI is transcribing your speech..."
         );
 
-
-        // ==================================
-        // CONVERT TO BASE64 WITHOUT
-        // GIANT STRING OPERATIONS
-        // ==================================
 
         const base64Audio =
             await blobToBase64(
                 audioBlob
             );
 
-
-        // ==================================
-        // SEND TO VERCEL
-        // ==================================
 
         const response =
             await fetch(
@@ -1144,10 +1353,11 @@ async function sendRecording() {
                             "application/json"
                     },
 
-                    body: JSON.stringify({
-                        audio:
-                            base64Audio
-                    })
+                    body:
+                        JSON.stringify({
+                            audio:
+                                base64Audio
+                        })
                 }
             );
 
@@ -1165,41 +1375,24 @@ async function sendRecording() {
         }
 
 
-        if (!data.transcript) {
+        if (
+            !data.transcript
+        ) {
 
             throw new Error(
-                "The AI returned an empty transcript."
+                "OpenAI returned an empty transcript."
             );
         }
 
-
-        console.log(
-            "Final transcript:",
-            data.transcript
-        );
-
-
-        // ==================================
-        // DISPLAY FINAL TRANSCRIPT
-        // ==================================
 
         displayTranscript(
             data.transcript
         );
 
 
-        // ==================================
-        // FINISHED
-        // ==================================
-
         setStatus(
             "Finished",
             "ready"
-        );
-
-
-        showMessage(
-            data.transcript
         );
 
 
@@ -1210,100 +1403,30 @@ async function sendRecording() {
             error
         );
 
+
         setStatus(
             "Transcription error",
             "error"
         );
+
 
         showMessage(
             "Transcription failed: " +
             error.message
         );
 
+
     } finally {
 
-        isProcessing = false;
+        isProcessing =
+            false;
 
-        listenButton.disabled = false;
+        listenButton.disabled =
+            false;
 
-        stopButton.disabled = true;
+        stopButton.disabled =
+            true;
     }
-}
-
-
-// ==========================================
-// BLOB → BASE64
-// ==========================================
-
-function blobToBase64(blob) {
-
-    return new Promise(
-        (resolve, reject) => {
-
-            const reader =
-                new FileReader();
-
-            reader.onloadend = () => {
-
-                const result =
-                    reader.result;
-
-                if (
-                    typeof result !==
-                    "string"
-                ) {
-
-                    reject(
-                        new Error(
-                            "Could not convert audio."
-                        )
-                    );
-
-                    return;
-                }
-
-
-                // Remove:
-                // data:audio/webm;base64,
-
-                const commaIndex =
-                    result.indexOf(",");
-
-                if (
-                    commaIndex === -1
-                ) {
-
-                    reject(
-                        new Error(
-                            "Invalid audio data."
-                        )
-                    );
-
-                    return;
-                }
-
-
-                resolve(
-                    result.substring(
-                        commaIndex + 1
-                    )
-                );
-            };
-
-
-            reader.onerror = () => {
-
-                reject(
-                    new Error(
-                        "Could not read audio."
-                    )
-                );
-            };
-
-
-            reader.readAsDataURL(blob);
-        }
-    );
 }
 
 
@@ -1311,36 +1434,29 @@ function blobToBase64(blob) {
 // ANALYZE SPEECH
 // ==========================================
 
-if (analyzeButton) {
-
-    analyzeButton.addEventListener(
-        "click",
-        analyzeSpeech
-    );
-}
-
-
 async function analyzeSpeech() {
 
     if (
         !finalTranscript ||
         !finalTranscript.trim()
     ) {
-
         return;
     }
 
 
-    analyzeButton.disabled = true;
+    analyzeButton.disabled =
+        true;
 
 
     if (analysisLoading) {
-        analysisLoading.hidden = false;
+        analysisLoading.hidden =
+            false;
     }
 
 
     if (analysisElement) {
-        analysisElement.textContent = "";
+        analysisElement.innerHTML =
+            "";
     }
 
 
@@ -1357,13 +1473,14 @@ async function analyzeSpeech() {
                             "application/json"
                     },
 
-                    body: JSON.stringify({
-                        transcript:
-                            finalTranscript,
+                    body:
+                        JSON.stringify({
+                            transcript:
+                                finalTranscript,
 
-                        trackedWords:
-                            trackedWords
-                    })
+                            trackedWords:
+                                trackedWords
+                        })
                 }
             );
 
@@ -1374,6 +1491,11 @@ async function analyzeSpeech() {
 
         if (!response.ok) {
 
+            console.error(
+                "ANALYSIS API ERROR:",
+                data
+            );
+
             throw new Error(
                 data.error ||
                 "Analysis failed."
@@ -1381,11 +1503,22 @@ async function analyzeSpeech() {
         }
 
 
+        if (
+            !data.analysis
+        ) {
+
+            throw new Error(
+                "The AI returned no analysis."
+            );
+        }
+
+
         if (analysisElement) {
 
-            analysisElement.textContent =
-                data.analysis ||
-                "No analysis was returned.";
+            analysisElement.innerHTML =
+                formatAnalysis(
+                    data.analysis
+                );
         }
 
 
@@ -1396,6 +1529,7 @@ async function analyzeSpeech() {
             error
         );
 
+
         if (analysisElement) {
 
             analysisElement.textContent =
@@ -1403,19 +1537,49 @@ async function analyzeSpeech() {
                 error.message;
         }
 
+
     } finally {
 
         if (analysisLoading) {
-            analysisLoading.hidden = true;
+            analysisLoading.hidden =
+                true;
         }
 
-        analyzeButton.disabled = false;
+        analyzeButton.disabled =
+            false;
     }
 }
 
 
 // ==========================================
-// INITIALIZE
+// FORMAT AI ANALYSIS
+// ==========================================
+
+function formatAnalysis(text) {
+
+    return escapeHTML(text)
+        .replace(
+            /\*\*(.*?)\*\*/g,
+            "<strong>$1</strong>"
+        )
+        .replace(
+            /\n/g,
+            "<br>"
+        );
+}
+
+
+if (analyzeButton) {
+
+    analyzeButton.addEventListener(
+        "click",
+        analyzeSpeech
+    );
+}
+
+
+// ==========================================
+// STARTUP
 // ==========================================
 
 renderWords();
@@ -1432,31 +1596,17 @@ showMessage(
 );
 
 
-// ==========================================
-// DEBUG
-// ==========================================
-
 console.log(
     "Speech Tracker loaded."
 );
 
 console.log(
-    "HTTPS:",
-    location.protocol
-);
-
-console.log(
-    "Microphone:",
-    !!navigator.mediaDevices
+    "Live recognition:",
+    recognitionSupported
 );
 
 console.log(
     "Vibration:",
     typeof navigator.vibrate ===
-    "function"
-);
-
-console.log(
-    "Live speech recognition:",
-    recognitionSupported
+        "function"
 );
