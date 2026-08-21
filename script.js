@@ -1,7 +1,7 @@
 // ==========================================
 // SPEECH TRACKER
-// AI TRANSCRIPTION + FILLER DETECTION
-// + PHONE VIBRATION
+// Microphone → AI Transcription → Filler Words
+// → Red Highlighting → Phone Vibration
 // ==========================================
 
 
@@ -9,17 +9,16 @@
 // ELEMENTS
 // ==========================================
 
-const statusText =
-    document.getElementById("status");
+const statusText = document.getElementById("status");
+const statusDot = document.getElementById("statusDot");
+const heardText = document.getElementById("heard");
 
-const statusDot =
-    document.getElementById("statusDot");
+const listenButton = document.getElementById("listenButton");
 
-const heardText =
-    document.getElementById("heard");
 
-const listenButton =
-    document.getElementById("listenButton");
+// These elements are optional.
+// The code will still work if your current HTML
+// doesn't have them yet.
 
 const stopButton =
     document.getElementById("stopButton");
@@ -42,18 +41,9 @@ const fillerCountElement =
 const wordCountElement =
     document.getElementById("wordCount");
 
-const analyzeButton =
-    document.getElementById("analyzeButton");
-
-const analysisElement =
-    document.getElementById("analysis");
-
-const analysisLoading =
-    document.getElementById("analysisLoading");
-
 
 // ==========================================
-// DEFAULT TRACKED WORDS
+// DEFAULT FILLER WORDS
 // ==========================================
 
 const DEFAULT_WORDS = [
@@ -70,31 +60,41 @@ const DEFAULT_WORDS = [
 
 
 // ==========================================
-// LOAD CUSTOM WORDS
+// LOAD SAVED WORDS
 // ==========================================
 
-let savedWords =
-    localStorage.getItem(
-        "speechTrackerWords"
-    );
-
-let trackedWords;
+let trackedWords = [];
 
 try {
 
-    trackedWords =
-        savedWords
-            ? JSON.parse(savedWords)
-            : [...DEFAULT_WORDS];
+    const saved =
+        localStorage.getItem(
+            "speechTrackerWords"
+        );
 
-    if (!Array.isArray(trackedWords)) {
+    if (saved) {
 
-        trackedWords =
-            [...DEFAULT_WORDS];
+        const parsed =
+            JSON.parse(saved);
+
+        if (Array.isArray(parsed)) {
+
+            trackedWords = parsed;
+
+        }
 
     }
 
-} catch {
+} catch (error) {
+
+    console.log(
+        "Could not load saved words."
+    );
+
+}
+
+
+if (trackedWords.length === 0) {
 
     trackedWords =
         [...DEFAULT_WORDS];
@@ -108,9 +108,9 @@ try {
 
 let mediaRecorder = null;
 
-let audioChunks = [];
-
 let audioStream = null;
+
+let audioChunks = [];
 
 let isRecording = false;
 
@@ -130,11 +130,37 @@ function setStatus(
     state = "ready"
 ) {
 
-    statusText.textContent =
-        message;
+    if (statusText) {
 
-    statusDot.className =
-        "dot " + state;
+        statusText.textContent =
+            message;
+
+    }
+
+    if (statusDot) {
+
+        statusDot.className =
+            "dot " + state;
+
+    }
+
+}
+
+
+// ==========================================
+// MESSAGE
+// ==========================================
+
+function showMessage(
+    message
+) {
+
+    if (heardText) {
+
+        heardText.textContent =
+            message;
+
+    }
 
 }
 
@@ -156,10 +182,53 @@ function saveWords() {
 
 
 // ==========================================
-// RENDER WORD LIST
+// ESCAPE HTML
+// ==========================================
+
+function escapeHTML(
+    text
+) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+    div.textContent =
+        text;
+
+    return div.innerHTML;
+
+}
+
+
+// ==========================================
+// ESCAPE REGEX
+// ==========================================
+
+function escapeRegex(
+    text
+) {
+
+    return text.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+    );
+
+}
+
+
+// ==========================================
+// RENDER CUSTOM WORDS
 // ==========================================
 
 function renderWords() {
+
+    if (!wordList) {
+
+        return;
+
+    }
 
     wordList.innerHTML = "";
 
@@ -214,11 +283,18 @@ function renderWords() {
             );
 
 
-            tag.appendChild(text);
+            tag.appendChild(
+                text
+            );
 
-            tag.appendChild(remove);
+            tag.appendChild(
+                remove
+            );
 
-            wordList.appendChild(tag);
+
+            wordList.appendChild(
+                tag
+            );
 
         }
     );
@@ -232,6 +308,13 @@ function renderWords() {
 
 function addCustomWord() {
 
+    if (!customWordInput) {
+
+        return;
+
+    }
+
+
     const word =
         customWordInput.value
             .trim()
@@ -239,8 +322,6 @@ function addCustomWord() {
 
 
     if (!word) {
-
-        customWordInput.focus();
 
         return;
 
@@ -251,7 +332,9 @@ function addCustomWord() {
         !trackedWords.includes(word)
     ) {
 
-        trackedWords.push(word);
+        trackedWords.push(
+            word
+        );
 
         saveWords();
 
@@ -262,80 +345,67 @@ function addCustomWord() {
 
     customWordInput.value = "";
 
-    customWordInput.focus();
+}
+
+
+// ==========================================
+// CUSTOM WORD BUTTON
+// ==========================================
+
+if (addWordButton) {
+
+    addWordButton.addEventListener(
+        "click",
+        addCustomWord
+    );
 
 }
 
 
-addWordButton.addEventListener(
-    "click",
-    addCustomWord
-);
+// ==========================================
+// CUSTOM WORD ENTER KEY
+// ==========================================
 
+if (customWordInput) {
 
-customWordInput.addEventListener(
-    "keydown",
-    function(event) {
+    customWordInput.addEventListener(
+        "keydown",
+        function(event) {
 
-        if (event.key === "Enter") {
+            if (
+                event.key === "Enter"
+            ) {
 
-            event.preventDefault();
+                event.preventDefault();
 
-            addCustomWord();
+                addCustomWord();
+
+            }
 
         }
+    );
 
-    }
-);
+}
 
 
 // ==========================================
 // RESET WORDS
 // ==========================================
 
-resetWordsButton.addEventListener(
-    "click",
-    function() {
+if (resetWordsButton) {
 
-        trackedWords =
-            [...DEFAULT_WORDS];
+    resetWordsButton.addEventListener(
+        "click",
+        function() {
 
-        saveWords();
+            trackedWords =
+                [...DEFAULT_WORDS];
 
-        renderWords();
+            saveWords();
 
-    }
-);
+            renderWords();
 
-
-// ==========================================
-// ESCAPE HTML
-// ==========================================
-
-function escapeHTML(text) {
-
-    const div =
-        document.createElement(
-            "div"
-        );
-
-    div.textContent =
-        text;
-
-    return div.innerHTML;
-
-}
-
-
-// ==========================================
-// ESCAPE REGEX
-// ==========================================
-
-function escapeRegex(text) {
-
-    return text.replace(
-        /[.*+?^${}()|[\]\\]/g,
-        "\\$&"
+        }
     );
 
 }
@@ -353,7 +423,7 @@ function highlightTrackedWords(
         escapeHTML(text);
 
 
-    const words =
+    const sortedWords =
         [...trackedWords].sort(
             function(a, b) {
 
@@ -366,10 +436,10 @@ function highlightTrackedWords(
         );
 
 
-    words.forEach(
+    sortedWords.forEach(
         function(word) {
 
-            const escaped =
+            const escapedWord =
                 escapeRegex(
                     escapeHTML(word)
                 );
@@ -378,7 +448,7 @@ function highlightTrackedWords(
             const regex =
                 new RegExp(
                     "(^|\\s)(" +
-                    escaped +
+                    escapedWord +
                     ")(?=\\s|[.,!?;:]|$)",
                     "gi"
                 );
@@ -400,7 +470,7 @@ function highlightTrackedWords(
 
 
 // ==========================================
-// COUNT TRACKED WORDS
+// COUNT FILLER WORDS
 // ==========================================
 
 function countTrackedWords(
@@ -423,7 +493,9 @@ function countTrackedWords(
 
 
             const matches =
-                text.match(regex);
+                text.match(
+                    regex
+                );
 
 
             if (matches) {
@@ -466,86 +538,96 @@ function countTotalWords(
 
 
 // ==========================================
-// UPDATE TRANSCRIPT
+// DISPLAY TRANSCRIPT
 // ==========================================
 
-function updateTranscript() {
+function displayTranscript(
+    text
+) {
 
-    if (!finalTranscript) {
-
-        heardText.textContent =
-            "Your speech will appear here.";
-
-        return;
-
-    }
-
-
-    heardText.innerHTML =
-        highlightTrackedWords(
-            finalTranscript
-        );
+    finalTranscript =
+        text;
 
 
     fillerCount =
         countTrackedWords(
-            finalTranscript
+            text
         );
 
 
     totalWords =
         countTotalWords(
-            finalTranscript
+            text
         );
 
 
-    fillerCountElement.textContent =
-        fillerCount;
+    if (heardText) {
+
+        heardText.innerHTML =
+            highlightTrackedWords(
+                text
+            );
+
+    }
 
 
-    wordCountElement.textContent =
-        totalWords;
+    if (fillerCountElement) {
+
+        fillerCountElement.textContent =
+            fillerCount;
+
+    }
+
+
+    if (wordCountElement) {
+
+        wordCountElement.textContent =
+            totalWords;
+
+    }
 
 }
 
 
 // ==========================================
-// VIBRATE
+// VIBRATION
 // ==========================================
 
 function vibrate() {
 
     if (
-        "vibrate" in navigator
+        typeof navigator.vibrate !==
+        "function"
     ) {
 
-        navigator.vibrate(
-            180
+        console.log(
+            "Vibration is not supported."
         );
 
-        return true;
+        return false;
 
     }
 
-    console.log(
-        "This device/browser does not support vibration."
+
+    navigator.vibrate(
+        [150]
     );
 
-    return false;
+
+    return true;
 
 }
 
 
 // ==========================================
-// VIBRATE FOR EVERY DETECTED WORD
+// FIND FILLER WORDS
 // ==========================================
 
-async function vibrateForDetectedWords(
+function findTrackedWords(
     text
 ) {
 
-    const words =
-        [];
+    const matches = [];
 
 
     trackedWords.forEach(
@@ -569,9 +651,13 @@ async function vibrateForDetectedWords(
                 !== null
             ) {
 
-                words.push({
-                    word: word,
-                    index: match.index
+                matches.push({
+                    word:
+                        word,
+
+                    index:
+                        match.index
+
                 });
 
             }
@@ -580,17 +666,45 @@ async function vibrateForDetectedWords(
     );
 
 
-    words.sort(
+    matches.sort(
         function(a, b) {
 
-            return a.index - b.index;
+            return (
+                a.index -
+                b.index
+            );
 
         }
     );
 
 
+    return matches;
+
+}
+
+
+// ==========================================
+// VIBRATE FOR DETECTED WORDS
+// ==========================================
+
+async function vibrateForTrackedWords(
+    text
+) {
+
+    const matches =
+        findTrackedWords(
+            text
+        );
+
+
+    console.log(
+        "Tracked words:",
+        matches
+    );
+
+
     for (
-        const item of words
+        const match of matches
     ) {
 
         vibrate();
@@ -601,7 +715,7 @@ async function vibrateForDetectedWords(
 
                 setTimeout(
                     resolve,
-                    350
+                    400
                 );
 
             }
@@ -613,186 +727,364 @@ async function vibrateForDetectedWords(
 
 
 // ==========================================
+// MICROPHONE SUPPORT CHECK
+// ==========================================
+
+function checkMicrophoneSupport() {
+
+    if (
+        !navigator.mediaDevices
+    ) {
+
+        return false;
+
+    }
+
+
+    if (
+        !navigator.mediaDevices
+            .getUserMedia
+    ) {
+
+        return false;
+
+    }
+
+
+    return true;
+
+}
+
+
+// ==========================================
 // START RECORDING
 // ==========================================
 
-listenButton.addEventListener(
-    "click",
-    async function() {
+async function startRecording() {
 
-        if (isRecording) {
+    if (isRecording) {
 
-            return;
+        return;
+
+    }
+
+
+    // Check microphone support
+
+    if (
+        !checkMicrophoneSupport()
+    ) {
+
+        setStatus(
+            "Microphone unavailable",
+            "error"
+        );
+
+
+        showMessage(
+            "Your browser does not allow microphone access."
+        );
+
+
+        return;
+
+    }
+
+
+    try {
+
+        console.log(
+            "Requesting microphone..."
+        );
+
+
+        audioStream =
+            await navigator
+                .mediaDevices
+                .getUserMedia({
+                    audio: true
+                });
+
+
+        console.log(
+            "Microphone permission granted."
+        );
+
+
+        audioChunks = [];
+
+
+        // Choose a supported recording format
+
+        let mimeType =
+            "";
+
+
+        if (
+            MediaRecorder.isTypeSupported(
+                "audio/webm;codecs=opus"
+            )
+        ) {
+
+            mimeType =
+                "audio/webm;codecs=opus";
+
+        }
+
+        else if (
+            MediaRecorder.isTypeSupported(
+                "audio/webm"
+            )
+        ) {
+
+            mimeType =
+                "audio/webm";
+
+        }
+
+        else if (
+            MediaRecorder.isTypeSupported(
+                "audio/mp4"
+            )
+        ) {
+
+            mimeType =
+                "audio/mp4";
 
         }
 
 
-        try {
+        if (mimeType) {
 
-            audioStream =
-                await navigator.mediaDevices
-                    .getUserMedia({
-                        audio: true
-                    });
+            mediaRecorder =
+                new MediaRecorder(
+                    audioStream,
+                    {
+                        mimeType:
+                            mimeType
+                    }
+                );
 
+        }
 
-            audioChunks = [];
-
+        else {
 
             mediaRecorder =
                 new MediaRecorder(
                     audioStream
                 );
 
-
-            mediaRecorder.ondataavailable =
-                function(event) {
-
-                    if (
-                        event.data.size > 0
-                    ) {
-
-                        audioChunks.push(
-                            event.data
-                        );
-
-                    }
-
-                };
+        }
 
 
-            mediaRecorder.onstop =
-                async function() {
+        mediaRecorder.addEventListener(
+            "dataavailable",
+            function(event) {
 
-                    await processRecording();
+                if (
+                    event.data &&
+                    event.data.size > 0
+                ) {
 
-                };
+                    audioChunks.push(
+                        event.data
+                    );
+
+                }
+
+            }
+        );
 
 
-            mediaRecorder.start();
+        mediaRecorder.addEventListener(
+            "stop",
+            async function() {
 
-            isRecording = true;
+                await sendRecording();
 
+            }
+        );
+
+
+        mediaRecorder.start(
+            250
+        );
+
+
+        isRecording =
+            true;
+
+
+        if (listenButton) {
 
             listenButton.disabled =
                 true;
 
+        }
+
+
+        if (stopButton) {
 
             stopButton.disabled =
                 false;
 
-
-            setStatus(
-                "Recording...",
-                "listening"
-            );
-
-
-            heardText.textContent =
-                "Listening to your speech...";
-
-
-            fillerCount = 0;
-
-            totalWords = 0;
-
-
-            fillerCountElement.textContent =
-                "0";
-
-
-            wordCountElement.textContent =
-                "0";
-
-
-        } catch (error) {
-
-            console.error(
-                error
-            );
-
-
-            setStatus(
-                "Microphone error",
-                "error"
-            );
-
-
-            heardText.textContent =
-                "Could not access your microphone. Please allow microphone access.";
-
         }
 
+
+        setStatus(
+            "Recording...",
+            "listening"
+        );
+
+
+        showMessage(
+            "🎤 Listening... Press Stop when you're finished."
+        );
+
+
     }
-);
+
+    catch (error) {
+
+        console.error(
+            "MICROPHONE ERROR:",
+            error.name,
+            error.message
+        );
+
+
+        setStatus(
+            "Microphone error",
+            "error"
+        );
+
+
+        showMessage(
+            "Microphone error: " +
+            error.name +
+            " — " +
+            error.message
+        );
+
+
+    }
+
+}
 
 
 // ==========================================
 // STOP RECORDING
 // ==========================================
 
-stopButton.addEventListener(
-    "click",
-    function() {
+function stopRecording() {
 
-        if (
-            !mediaRecorder ||
-            !isRecording
-        ) {
+    if (
+        !mediaRecorder ||
+        !isRecording
+    ) {
 
-            return;
+        return;
 
-        }
+    }
 
 
-        mediaRecorder.stop();
-
-        isRecording = false;
+    mediaRecorder.stop();
 
 
-        if (audioStream) {
+    isRecording =
+        false;
 
-            audioStream
-                .getTracks()
-                .forEach(
-                    function(track) {
 
-                        track.stop();
+    if (audioStream) {
 
-                    }
-                );
+        audioStream
+            .getTracks()
+            .forEach(
+                function(track) {
 
-        }
+                    track.stop();
 
+                }
+            );
+
+    }
+
+
+    if (listenButton) {
 
         listenButton.disabled =
             false;
 
+    }
+
+
+    if (stopButton) {
 
         stopButton.disabled =
             true;
 
-
-        setStatus(
-            "Transcribing...",
-            "listening"
-        );
-
-
-        heardText.textContent =
-            "🤖 AI is transcribing your speech...";
-
     }
-);
+
+
+    setStatus(
+        "Transcribing...",
+        "listening"
+    );
+
+
+    showMessage(
+        "🤖 AI is transcribing your speech..."
+    );
+
+}
 
 
 // ==========================================
-// SEND RECORDING TO AI
+// LISTEN BUTTON
 // ==========================================
 
-async function processRecording() {
+if (listenButton) {
+
+    listenButton.addEventListener(
+        "click",
+        startRecording
+    );
+
+}
+
+
+// ==========================================
+// STOP BUTTON
+// ==========================================
+
+if (stopButton) {
+
+    stopButton.addEventListener(
+        "click",
+        stopRecording
+    );
+
+}
+
+
+// ==========================================
+// SEND RECORDING TO VERCEL API
+// ==========================================
+
+async function sendRecording() {
 
     try {
+
+        if (
+            audioChunks.length === 0
+        ) {
+
+            throw new Error(
+                "No audio was recorded."
+            );
+
+        }
+
 
         const audioBlob =
             new Blob(
@@ -803,6 +1095,13 @@ async function processRecording() {
                         "audio/webm"
                 }
             );
+
+
+        console.log(
+            "Audio recorded:",
+            audioBlob.size,
+            "bytes"
+        );
 
 
         const arrayBuffer =
@@ -819,7 +1118,7 @@ async function processRecording() {
 
 
         const chunkSize =
-            0x8000;
+            8192;
 
 
         for (
@@ -828,15 +1127,20 @@ async function processRecording() {
             i += chunkSize
         ) {
 
-            binary += String.fromCharCode(
-                ...bytes.subarray(
+            const chunk =
+                bytes.subarray(
                     i,
                     Math.min(
                         i + chunkSize,
                         bytes.length
                     )
-                )
-            );
+                );
+
+
+            binary +=
+                String.fromCharCode(
+                    ...chunk
+                );
 
         }
 
@@ -845,67 +1149,73 @@ async function processRecording() {
             btoa(binary);
 
 
+        console.log(
+            "Sending audio to AI..."
+        );
+
+
         const response =
             await fetch(
                 "/api/transcribe",
                 {
-                    method: "POST",
+                    method:
+                        "POST",
 
                     headers: {
                         "Content-Type":
                             "application/json"
                     },
 
-                    body: JSON.stringify({
-                        audio:
-                            base64Audio
-                    })
+                    body:
+                        JSON.stringify({
+                            audio:
+                                base64Audio
+                        })
 
                 }
             );
-
-
-        if (!response.ok) {
-
-            const error =
-                await response.text();
-
-            console.error(
-                error
-            );
-
-            throw new Error(
-                "Transcription failed"
-            );
-
-        }
 
 
         const data =
             await response.json();
 
 
-        finalTranscript =
-            data.transcript || "";
+        if (!response.ok) {
 
-
-        updateTranscript();
-
-
-        if (!finalTranscript) {
-
-            setStatus(
-                "No speech detected",
-                "error"
+            console.error(
+                "API ERROR:",
+                data
             );
 
 
-            heardText.textContent =
-                "No speech was detected.";
-
-            return;
+            throw new Error(
+                data.error ||
+                "Transcription failed."
+            );
 
         }
+
+
+        console.log(
+            "AI transcription:",
+            data.transcript
+        );
+
+
+        if (
+            !data.transcript
+        ) {
+
+            throw new Error(
+                "The AI returned an empty transcript."
+            );
+
+        }
+
+
+        displayTranscript(
+            data.transcript
+        );
 
 
         setStatus(
@@ -914,25 +1224,17 @@ async function processRecording() {
         );
 
 
-        // Vibrate for every tracked word
-        await vibrateForDetectedWords(
-            finalTranscript
+        await vibrateForTrackedWords(
+            data.transcript
         );
 
 
-        // Enable AI analysis
-        if (analyzeButton) {
+    }
 
-            analyzeButton.disabled =
-                false;
-
-        }
-
-
-    } catch (error) {
+    catch (error) {
 
         console.error(
-            "Transcription error:",
+            "TRANSCRIPTION ERROR:",
             error
         );
 
@@ -943,250 +1245,12 @@ async function processRecording() {
         );
 
 
-        heardText.textContent =
-            "Could not transcribe your speech. Check your API setup and try again.";
-
-    }
-
-}
-
-
-// ==========================================
-// AI SPEECH ANALYSIS
-// ==========================================
-
-if (analyzeButton) {
-
-    analyzeButton.addEventListener(
-        "click",
-        analyzeSpeech
-    );
-
-}
-
-
-async function analyzeSpeech() {
-
-    if (!finalTranscript) {
-
-        return;
-
-    }
-
-
-    analyzeButton.disabled =
-        true;
-
-
-    if (analysisLoading) {
-
-        analysisLoading.hidden =
-            false;
-
-    }
-
-
-    if (analysisElement) {
-
-        analysisElement.innerHTML =
-            "";
-
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/analyze",
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        transcript:
-                            finalTranscript,
-
-                        trackedWords:
-                            trackedWords,
-
-                        fillerCount:
-                            fillerCount,
-
-                        wordCount:
-                            totalWords
-
-                    })
-
-                }
-            );
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                "Analysis failed"
-            );
-
-        }
-
-
-        const data =
-            await response.json();
-
-
-        displayAnalysis(
-            data
+        showMessage(
+            "Transcription failed: " +
+            error.message
         );
 
-
-    } catch (error) {
-
-        console.error(
-            error
-        );
-
-
-        if (analysisElement) {
-
-            analysisElement.innerHTML =
-                `<p>
-                    AI analysis failed.
-                    Check your API setup.
-                </p>`;
-
-        }
-
     }
-
-
-    if (analysisLoading) {
-
-        analysisLoading.hidden =
-            true;
-
-    }
-
-
-    analyzeButton.disabled =
-        false;
-
-}
-
-
-// ==========================================
-// DISPLAY ANALYSIS
-// ==========================================
-
-function displayAnalysis(
-    data
-) {
-
-    if (!analysisElement) {
-
-        return;
-
-    }
-
-
-    analysisElement.innerHTML = `
-
-        <div class="analysis-section">
-
-            <h3>Overall</h3>
-
-            <p>
-                ${escapeHTML(
-                    data.overall || ""
-                )}
-            </p>
-
-        </div>
-
-
-        <div class="analysis-section">
-
-            <h3>Filler Words</h3>
-
-            <p>
-                ${escapeHTML(
-                    data.fillerFeedback || ""
-                )}
-            </p>
-
-        </div>
-
-
-        <div class="analysis-section">
-
-            <h3>Clarity</h3>
-
-            <p>
-                ${escapeHTML(
-                    data.clarity || ""
-                )}
-            </p>
-
-        </div>
-
-
-        <div class="analysis-section">
-
-            <h3>Pacing</h3>
-
-            <p>
-                ${escapeHTML(
-                    data.pacing || ""
-                )}
-            </p>
-
-        </div>
-
-
-        <div class="analysis-section">
-
-            <h3>Strengths</h3>
-
-            <p>
-                ${escapeHTML(
-                    data.strengths || ""
-                )}
-            </p>
-
-        </div>
-
-
-        <div class="analysis-section">
-
-            <h3>Improve</h3>
-
-            <p>
-                ${escapeHTML(
-                    data.improvements || ""
-                )}
-            </p>
-
-        </div>
-
-
-        <div class="analysis-section">
-
-            <h3>Next Goal</h3>
-
-            <p>
-                ${escapeHTML(
-                    data.nextGoal || ""
-                )}
-            </p>
-
-        </div>
-
-    `;
 
 }
 
@@ -1197,9 +1261,46 @@ function displayAnalysis(
 
 renderWords();
 
+
 setStatus(
     "Ready",
     "ready"
 );
 
-updateTranscript();
+
+showMessage(
+    "Tap Listen and start speaking."
+);
+
+
+// ==========================================
+// DEBUG INFORMATION
+// ==========================================
+
+console.log(
+    "Speech Tracker loaded."
+);
+
+console.log(
+    "HTTPS:",
+    location.protocol
+);
+
+console.log(
+    "Microphone API:",
+    !!navigator.mediaDevices
+);
+
+console.log(
+    "getUserMedia:",
+    !!(
+        navigator.mediaDevices &&
+        navigator.mediaDevices.getUserMedia
+    )
+);
+
+console.log(
+    "Vibration:",
+    typeof navigator.vibrate ===
+    "function"
+);
