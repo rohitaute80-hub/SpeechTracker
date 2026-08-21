@@ -16,11 +16,16 @@ export default async function handler(req, res) {
 
         if (!process.env.OPENAI_API_KEY) {
             return res.status(500).json({
-                error: "OPENAI_API_KEY is missing"
+                error: "OPENAI_API_KEY is missing from Vercel"
             });
         }
 
         const body = req.body || {};
+
+        console.log(
+            "REQUEST BODY:",
+            body
+        );
 
         const transcript =
             typeof body.transcript === "string"
@@ -38,67 +43,73 @@ export default async function handler(req, res) {
             });
         }
 
-        const fillerWords =
-            trackedWords.join(", ");
+        const wordList =
+            trackedWords.length > 0
+                ? trackedWords.join(", ")
+                : "None";
 
         const prompt = `
-You are a public speaking coach.
+You are an expert public speaking coach.
 
-Analyze the following speech transcript.
+Analyze this speech transcript.
 
-Tracked words:
-${fillerWords}
+TRACKED WORDS:
+${wordList}
 
-Speech transcript:
+TRANSCRIPT:
 ${transcript}
 
-Give concise, useful feedback.
+Give useful, encouraging feedback.
 
-Use these sections:
+Use exactly these sections:
 
 OVERALL SCORE
 Give a score from 1 to 10.
 
 WHAT YOU DID WELL
-Give 2 specific strengths.
+Give two specific strengths.
 
 FILLER WORDS
-Identify the tracked filler words that appeared and comment on them.
+Explain which tracked words appeared and how often if possible.
 
 CLARITY
-Comment on how clear and easy to follow the speech was.
+Explain how clear and easy to follow the speech was.
 
 HOW TO IMPROVE
-Give 3 practical suggestions.
+Give three specific suggestions.
 
 NEXT CHALLENGE
 Give one short speaking exercise.
 
-Only use information supported by the transcript.
+Do not invent information that is not supported by the transcript.
 `;
 
-        console.log("Sending analysis request...");
+        console.log(
+            "Sending request to OpenAI..."
+        );
 
-        const response = await client.responses.create({
-            model: "gpt-5.6",
-            input: prompt
-        });
+        const response =
+            await client.responses.create({
+                model: "gpt-5.6-luna",
+                input: prompt
+            });
 
         console.log(
             "OpenAI response received."
         );
 
         const analysis =
-            response.output_text
+            typeof response.output_text === "string"
                 ? response.output_text.trim()
                 : "";
 
         console.log(
-            "Analysis length:",
-            analysis.length
+            "ANALYSIS:",
+            analysis
         );
 
         if (!analysis) {
+
             return res.status(502).json({
                 error:
                     "OpenAI returned an empty analysis."
@@ -112,14 +123,14 @@ Only use information supported by the transcript.
     } catch (error) {
 
         console.error(
-            "ANALYSIS ERROR:",
+            "OPENAI ANALYSIS ERROR:",
             error
         );
 
         return res.status(500).json({
             error:
                 error?.message ||
-                "Analysis request failed."
+                "AI analysis failed."
         });
     }
 }
