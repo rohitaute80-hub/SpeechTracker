@@ -1,3 +1,9 @@
+import OpenAI from "openai";
+
+const client = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+});
+
 export default async function handler(req, res) {
 
     if (req.method !== "POST") {
@@ -7,28 +13,12 @@ export default async function handler(req, res) {
         });
     }
 
-
     try {
-
-        const apiKey =
-            process.env.OPENAI_API_KEY;
-
-
-        if (!apiKey) {
-
-            return res.status(500).json({
-
-                error:
-                    "OPENAI_API_KEY is missing from Vercel."
-            });
-        }
-
 
         const {
             transcript,
             trackedWords
         } = req.body || {};
-
 
         if (
             !transcript ||
@@ -36,232 +26,94 @@ export default async function handler(req, res) {
         ) {
 
             return res.status(400).json({
-
-                error:
-                    "No transcript was provided."
+                error: "No transcript was provided."
             });
         }
 
-
         const words =
             Array.isArray(trackedWords)
-                ? trackedWords.join(", ")
-                : "None";
+                ? trackedWords
+                : [];
 
+        const fillerList =
+            words.join(", ");
 
         const prompt = `
 You are an expert public speaking coach.
 
-Analyze the following speech transcript.
+Analyze this person's speech transcript.
 
-TRACKED WORDS:
-${words}
+Tracked words:
+${fillerList || "None"}
 
-TRANSCRIPT:
+Transcript:
+"""
 ${transcript}
+"""
 
-Give concise but useful feedback.
+Give useful, encouraging feedback.
 
-Use exactly these sections:
+Include exactly these sections:
 
-1. Filler Word Usage
-Explain how the tracked words were used.
+1. Overall Score
+Give a score from 1-10.
 
-2. Clarity
-Evaluate how clear the speech was.
+2. What You Did Well
+Mention 2-3 specific strengths.
 
-3. Repetition
-Point out unnecessary repetition.
+3. Filler Words
+Explain how often the tracked words appeared and which ones appeared most.
 
-4. What You Did Well
-Give 2 specific positive observations.
+4. Clarity
+Comment on how clear and easy to follow the speech was.
 
-5. How To Improve
-Give exactly 3 practical suggestions.
+5. How to Improve
+Give 3 specific things the speaker can practice.
 
-Keep the feedback appropriate for a student.
+6. Quick Challenge
+Give one short exercise they can do next.
 
-Do not rewrite the entire speech.
-
-Focus on speaking performance.
+Do not invent facts that aren't supported by the transcript.
+Keep the feedback concise and practical.
 `;
 
-
         const response =
-            await fetch(
-                "https://api.openai.com/v1/responses",
-                {
-
-                    method: "POST",
-
-                    headers: {
-
-                        "Authorization":
-                            `Bearer ${apiKey}`,
-
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify({
-
-                            model:
-                                "gpt-5.6-luna",
-
-                            input:
-                                prompt
-                        })
-                }
-            );
-
-
-        const responseText =
-            await response.text();
-
-
-        console.log(
-            "Analysis status:",
-            response.status
-        );
-
-
-        console.log(
-            "Analysis raw response:",
-            responseText
-        );
-
-
-        if (!response.ok) {
-
-            return res.status(
-                response.status
-            ).json({
-
-                error:
-                    "OpenAI analysis request failed.",
-
-                details:
-                    responseText
+            await client.responses.create({
+                model: "gpt-5.6",
+                input: prompt
             });
-        }
 
+        const analysis =
+            response.output_text?.trim();
 
-        const result =
-            JSON.parse(
-                responseText
-            );
+        console.log(
+            "Analysis response:",
+            analysis
+        );
 
-
-        // OpenAI's Responses API normally
-        // provides output_text.
-
-        let analysis =
-            result.output_text || "";
-
-
-        // Extra fallback in case the response
-        // contains output blocks but output_text
-        // isn't populated.
-
-        if (
-            !analysis.trim() &&
-            Array.isArray(result.output)
-        ) {
-
-            const pieces = [];
-
-
-            for (
-                const item of result.output
-            ) {
-
-                if (
-                    item.type !==
-                    "message"
-                ) {
-                    continue;
-                }
-
-
-                if (
-                    !Array.isArray(
-                        item.content
-                    )
-                ) {
-                    continue;
-                }
-
-
-                for (
-                    const content
-                    of item.content
-                ) {
-
-                    if (
-                        content.type ===
-                        "output_text" &&
-                        content.text
-                    ) {
-
-                        pieces.push(
-                            content.text
-                        );
-                    }
-                }
-            }
-
-
-            analysis =
-                pieces.join("\n");
-        }
-
-
-        if (
-            !analysis.trim()
-        ) {
-
-            console.error(
-                "EMPTY OPENAI ANALYSIS:",
-                JSON.stringify(
-                    result,
-                    null,
-                    2
-                )
-            );
-
+        if (!analysis) {
 
             return res.status(502).json({
-
                 error:
-                    "OpenAI returned an empty analysis.",
-
-                details:
-                    "The request succeeded, but no text was returned."
+                    "OpenAI returned an empty analysis."
             });
         }
 
-
         return res.status(200).json({
-
-            analysis:
-                analysis
+            analysis
         });
-
 
     } catch (error) {
 
         console.error(
-            "ANALYSIS SERVER ERROR:",
+            "ANALYSIS API ERROR:",
             error
         );
 
-
         return res.status(500).json({
-
             error:
                 error.message ||
-                "Unknown server error"
+                "Speech analysis failed."
         });
     }
 }
