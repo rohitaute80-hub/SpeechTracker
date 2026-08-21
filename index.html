@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#111827">
-  <title>SpeechRing</title>
+
+  <title>Speech Tracker</title>
 
   <link rel="stylesheet" href="style.css">
 </head>
@@ -16,13 +17,17 @@
     <header>
       <div class="logo">◉</div>
 
-      <h1>SpeechRing</h1>
+      <h1>Speech Tracker</h1>
 
       <p class="subtitle">
-        Phone vibration prototype
+        Improve your speaking by tracking filler words.
       </p>
     </header>
 
+
+    <!-- =========================
+         SPEECH TRACKER
+    ========================== -->
 
     <section class="card">
 
@@ -31,88 +36,142 @@
         <span id="status">Ready</span>
       </div>
 
-      <div id="heard" class="heard">
-        Tap <b>Listen</b> and say a command.
+
+      <div class="stats">
+
+        <div class="stat">
+          <strong id="fillerCount">0</strong>
+          <span>Tracked Words</span>
+        </div>
+
+        <div class="stat">
+          <strong id="wordCount">0</strong>
+          <span>Total Words</span>
+        </div>
+
       </div>
 
+
+      <div
+        id="heard"
+        class="transcript"
+        aria-live="polite">
+
+        Your speech will appear here.
+
+      </div>
+
+
+      <div class="button-row">
+
+        <button
+          id="listenButton"
+          class="button primary">
+
+          🎤 Start Listening
+
+        </button>
+
+
+        <button
+          id="stopButton"
+          class="button secondary"
+          disabled>
+
+          ■ Stop
+
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         CUSTOM WORDS
+    ========================== -->
+
+    <section class="card">
+
+      <h2>Words to Track</h2>
+
+      <p class="info">
+        Add filler words or any other words you want Speech Tracker
+        to detect.
+      </p>
+
+
+      <div class="command-row">
+
+        <input
+          id="customWordInput"
+          type="text"
+          placeholder="Example: basically"
+          autocomplete="off"
+        >
+
+
+        <button
+          id="addWordButton"
+          class="button primary">
+
+          Add
+
+        </button>
+
+      </div>
+
+
+      <div
+        id="wordList"
+        class="word-list">
+
+      </div>
+
+
       <button
-        id="listenButton"
-        class="button primary">
-        🎤 Listen
+        id="resetWordsButton"
+        class="text-button">
+
+        Reset default words
+
       </button>
 
     </section>
 
 
+    <!-- =========================
+         INFORMATION
+    ========================== -->
+
     <section class="card">
 
-      <h2>Vibration patterns</h2>
-
-      <div class="pattern-grid">
-
-        <button
-          class="button secondary"
-          data-pattern="short">
-          Short
-        </button>
-
-        <button
-          class="button secondary"
-          data-pattern="double">
-          Double
-        </button>
-
-        <button
-          class="button secondary"
-          data-pattern="long">
-          Long
-        </button>
-
-        <button
-          class="button secondary"
-          data-pattern="alert">
-          Alert
-        </button>
-
-      </div>
+      <h2>How it works</h2>
 
       <p class="info">
-        These buttons test vibration on the phone running the website.
+
+        Speech Tracker listens to your microphone, transcribes
+        your speech, and highlights the words you choose to track.
+
       </p>
 
-    </section>
-
-
-    <section class="card">
-
-      <h2>Custom command</h2>
-
-      <div class="command-row">
-
-        <input
-          id="commandInput"
-          type="text"
-          placeholder="Try: vibrate"
-        >
-
-        <button
-          id="sendButton"
-          class="button primary send">
-          Send
-        </button>
-
-      </div>
-
       <p class="info">
-        Try <b>vibrate</b>, <b>double</b>, <b>long</b>,
-        <b>alert</b>, or <b>stop</b>.
+
+        <strong>Important:</strong>
+        Some browser speech-recognition systems automatically
+        remove sounds such as "um" and "uh" from their transcript.
+        If that happens, the browser is filtering them before
+        this website receives the text.
+
       </p>
 
     </section>
 
 
     <footer>
-      SpeechRing prototype • No hardware required
+
+      Speech Tracker • Browser-based speech analysis
+
     </footer>
 
   </main>
@@ -121,4 +180,5 @@
   <script src="script.js"></script>
 
 </body>
+
 </html>
