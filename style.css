@@ -1308,3 +1308,99 @@ body.dark {
 /* ============================================================
    END
    ============================================================ */
+
+   /* ============================================================
+   SPEECH TRACKER THEME BUTTON
+   ============================================================ */
+
+#themeToggle {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+
+    width: 48px;
+    height: 48px;
+
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #E4E4E7;
+    border-radius: 14px;
+
+    background: #FFFFFF;
+    color: #09090B;
+
+    font-size: 21px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    z-index: 99999;
+
+    box-shadow:
+        0 4px 14px rgba(0, 0, 0, 0.08);
+
+    transition:
+        transform 0.2s ease,
+        background 0.25s ease,
+        color 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.2s ease;
+}
+
+#themeToggle:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 7px 20px rgba(0, 0, 0, 0.12);
+}
+
+#themeToggle:active {
+    transform: scale(0.92);
+}
+
+
+/* ============================================================
+   DARK MODE
+   ============================================================ */
+
+html.dark,
+html.dark body {
+    background-color: #09090B;
+    color: #FAFAFA;
+}
+
+html.dark #themeToggle {
+    background: #18181B;
+    color: #FAFAFA;
+    border-color: #27272A;
+
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+html.dark #themeToggle:hover {
+    box-shadow:
+        0 7px 22px rgba(0, 0, 0, 0.5);
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 600px) {
+
+    #themeToggle {
+        top: 12px;
+        right: 12px;
+
+        width: 44px;
+        height: 44px;
+
+        border-radius: 12px;
+    }
+}
