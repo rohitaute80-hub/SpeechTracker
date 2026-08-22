@@ -1,8 +1,7 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
 
     <meta
@@ -12,7 +11,7 @@
 
     <meta
         name="theme-color"
-        content="#111827"
+        content="#09090B"
     >
 
     <meta
@@ -32,48 +31,32 @@
 
     <title>Speech Tracker</title>
 
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
-
+    <link rel="stylesheet" href="style.css">
 </head>
-
 
 <body>
 
     <main class="app">
 
+        <!-- HEADER -->
+        <header class="app-header">
 
-        <!-- =====================================
-             HEADER
-        ====================================== -->
+            <div class="brand">
 
-        <header>
+                <div class="logo">
+                    <span></span>
+                </div>
 
-            <div class="logo">
-                ◉
+                <div>
+                    <h1>Speech Tracker</h1>
+                    <p class="subtitle">
+                        AI-powered speaking practice
+                    </p>
+                </div>
+
             </div>
 
-            <h1>
-                Speech Tracker
-            </h1>
-
-            <p class="subtitle">
-                AI-powered speaking practice
-            </p>
-
-        </header>
-
-
-        <!-- =====================================
-             RECORDING CARD
-        ====================================== -->
-
-        <section class="card">
-
-            <div class="status">
-
+            <div class="header-status">
                 <span
                     id="statusDot"
                     class="dot ready"
@@ -82,6 +65,38 @@
                 <span id="status">
                     Ready
                 </span>
+            </div>
+
+        </header>
+
+
+        <!-- RECORDING -->
+        <section class="recording-card">
+
+            <div class="recording-top">
+
+                <div>
+                    <span class="eyebrow">
+                        LIVE PRACTICE
+                    </span>
+
+                    <h2>
+                        Speak naturally.
+                    </h2>
+
+                    <p>
+                        Practice your speech and get instant feedback.
+                    </p>
+                </div>
+
+                <div class="live-indicator">
+                    <span
+                        id="livePulse"
+                        class="live-pulse"
+                    ></span>
+
+                    <span>Live</span>
+                </div>
 
             </div>
 
@@ -90,7 +105,13 @@
                 id="heard"
                 class="heard"
             >
-                Tap <b>Listen</b> and start speaking.
+                <span class="heard-label">
+                    TRANSCRIPT
+                </span>
+
+                <span class="heard-text">
+                    Tap <strong>Listen</strong> and start speaking.
+                </span>
             </div>
 
 
@@ -98,119 +119,113 @@
 
                 <button
                     id="listenButton"
-                    class="button primary"
+                    class="button primary record-button"
                     type="button"
                 >
-                    🎤 Listen
+                    <span class="mic-icon">●</span>
+                    Listen
                 </button>
-
 
                 <button
                     id="stopButton"
-                    class="button secondary"
+                    class="button secondary record-button"
                     type="button"
                     disabled
                 >
-                    ⏹ Stop
+                    Stop
                 </button>
 
             </div>
 
 
-            <p class="info">
-
-                Live transcription appears while
-                you speak. A final AI transcription
-                is created when you press Stop.
-
+            <p class="recording-note">
+                Your speech appears live while you talk.
+                Stop when you're finished to unlock your AI analysis.
             </p>
 
         </section>
 
 
-        <!-- =====================================
-             SPEECH STATS
-        ====================================== -->
+        <!-- STATS -->
+        <section class="stats-grid">
 
-        <section class="card">
+            <div class="stat-card">
 
-            <h2>
-                Speech Stats
-            </h2>
-
-
-            <div class="stats-grid">
-
-
-                <div class="stat">
-
-                    <div
-                        id="fillerCount"
-                        class="stat-number"
-                    >
-                        0
-                    </div>
-
-                    <div class="stat-label">
+                <div class="stat-top">
+                    <span class="stat-title">
                         Tracked Words
-                    </div>
+                    </span>
 
+                    <span class="stat-symbol">
+                        #
+                    </span>
                 </div>
 
-
-                <div class="stat">
-
-                    <div
-                        id="wordCount"
-                        class="stat-number"
-                    >
-                        0
-                    </div>
-
-                    <div class="stat-label">
-                        Total Words
-                    </div>
-
+                <div
+                    id="fillerCount"
+                    class="stat-number"
+                >
+                    0
                 </div>
 
+                <div class="stat-description">
+                    Detected in speech
+                </div>
 
             </div>
 
 
-            <p class="info">
+            <div class="stat-card">
 
-                Tracked words are highlighted
-                <span class="example-red">
-                    red
-                </span>
-                in your transcript.
+                <div class="stat-top">
+                    <span class="stat-title">
+                        Total Words
+                    </span>
 
-            </p>
+                    <span class="stat-symbol">
+                        Aa
+                    </span>
+                </div>
+
+                <div
+                    id="wordCount"
+                    class="stat-number"
+                >
+                    0
+                </div>
+
+                <div class="stat-description">
+                    Words spoken
+                </div>
+
+            </div>
 
         </section>
 
 
-        <!-- =====================================
-             CUSTOM WORDS
-        ====================================== -->
-
+        <!-- WORDS TO TRACK -->
         <section class="card">
 
-            <h2>
-                Words to Track
-            </h2>
+            <div class="section-heading">
 
+                <div>
+                    <span class="eyebrow">
+                        PERSONALIZATION
+                    </span>
 
-            <p class="info">
+                    <h2>
+                        Words to Track
+                    </h2>
 
-                Add words you want Speech Tracker
-                to detect and highlight.
+                    <p class="info">
+                        Add words that you want Speech Tracker to detect.
+                    </p>
+                </div>
 
-            </p>
+            </div>
 
 
             <div class="command-row">
-
 
                 <input
                     id="customWordInput"
@@ -219,13 +234,12 @@
                     autocomplete="off"
                 >
 
-
                 <button
                     id="addWordButton"
-                    class="button primary send"
+                    class="button primary add-button"
                     type="button"
                 >
-                    Add
+                    Add Word
                 </button>
 
             </div>
@@ -239,102 +253,108 @@
 
             <button
                 id="resetWordsButton"
-                class="button secondary"
+                class="button secondary reset-button"
                 type="button"
             >
                 Reset Default Words
             </button>
 
-
         </section>
 
 
-        <!-- =====================================
-             DEFAULT WORDS
-        ====================================== -->
-
+        <!-- DEFAULT WORDS -->
         <section class="card">
 
-            <h2>
-                Default Tracked Words
-            </h2>
+            <div class="section-heading">
+
+                <div>
+                    <span class="eyebrow">
+                        DEFAULTS
+                    </span>
+
+                    <h2>
+                        Default Tracked Words
+                    </h2>
+
+                    <p class="info">
+                        These words are tracked automatically.
+                    </p>
+                </div>
+
+            </div>
 
 
             <div class="default-word-grid">
 
-                <span class="default-word">
-                    um
-                </span>
-
-                <span class="default-word">
-                    uh
-                </span>
-
-                <span class="default-word">
-                    umm
-                </span>
-
-                <span class="default-word">
-                    uhh
-                </span>
-
-                <span class="default-word">
-                    like
-                </span>
-
-                <span class="default-word">
-                    you know
-                </span>
-
-                <span class="default-word">
-                    basically
-                </span>
-
-                <span class="default-word">
-                    literally
-                </span>
-
-                <span class="default-word">
-                    actually
-                </span>
+                <span class="default-word">um</span>
+                <span class="default-word">uh</span>
+                <span class="default-word">umm</span>
+                <span class="default-word">uhh</span>
+                <span class="default-word">like</span>
+                <span class="default-word">you know</span>
+                <span class="default-word">basically</span>
+                <span class="default-word">literally</span>
+                <span class="default-word">actually</span>
 
             </div>
 
         </section>
 
 
-        <!-- =====================================
-             NOTIFICATIONS
-        ====================================== -->
-
+        <!-- NOTIFICATIONS -->
         <section class="card">
 
-            <h2>
-                🔔 Notifications
-            </h2>
+            <div class="section-heading">
+
+                <div>
+                    <span class="eyebrow">
+                        INSTANT FEEDBACK
+                    </span>
+
+                    <h2>
+                        Notifications
+                    </h2>
+
+                    <p class="info">
+                        Get an alert whenever a tracked word is detected.
+                    </p>
+                </div>
+
+            </div>
 
 
-            <p class="info">
+            <div class="notification-box">
 
-                Get a notification whenever you
-                say one of your tracked words.
+                <div class="notification-icon">
+                    !
+                </div>
 
-            </p>
+                <div>
+                    <strong>
+                        Enable instant alerts
+                    </strong>
+
+                    <p>
+                        Notifications let you know immediately when
+                        Speech Tracker catches a tracked word.
+                    </p>
+                </div>
+
+            </div>
 
 
             <button
                 id="enableNotifications"
-                class="button primary"
+                class="button primary full-button"
                 type="button"
-                style="width: 100%; margin-top: 14px;"
             >
-                🔔 Enable Notifications
+                Enable Notifications
             </button>
 
 
             <p
                 id="notificationStatus"
-                class="info"
+                class="info notification-status"
             >
                 Notifications are not enabled.
             </p>
@@ -342,26 +362,24 @@
         </section>
 
 
-        <!-- =====================================
-             AI ANALYSIS
-        ====================================== -->
-
-        <section class="card">
+        <!-- AI ANALYSIS -->
+        <section class="card ai-card">
 
             <div class="section-heading">
 
                 <div>
+                    <span class="eyebrow">
+                        AI COACH
+                    </span>
 
                     <h2>
-                        AI Speech Analysis
+                        Speech Analysis
                     </h2>
 
                     <p class="info">
-                        Get feedback on your speaking.
+                        Detailed feedback based on your actual speech.
                     </p>
-
                 </div>
-
 
                 <span class="ai-badge">
                     AI
@@ -370,13 +388,34 @@
             </div>
 
 
+            <div class="ai-intro">
+
+                <div class="ai-intro-icon">
+                    ✦
+                </div>
+
+                <div>
+                    <strong>
+                        Get a deeper breakdown
+                    </strong>
+
+                    <p>
+                        Your speech will be analyzed for organization,
+                        clarity, filler words, transitions, wording,
+                        strengths, and specific improvements.
+                    </p>
+                </div>
+
+            </div>
+
+
             <button
                 id="analyzeButton"
-                class="button primary"
+                class="button primary full-button analyze-button"
                 type="button"
                 disabled
             >
-                🤖 Analyze My Speech
+                Analyze My Speech
             </button>
 
 
@@ -385,7 +424,8 @@
                 class="analysis-loading"
                 hidden
             >
-                Analyzing your speech...
+                <span class="loading-spinner"></span>
+                <span>Analyzing your speech...</span>
             </div>
 
 
@@ -397,50 +437,65 @@
         </section>
 
 
-        <!-- =====================================
-             VIBRATION INFORMATION
-        ====================================== -->
-
+        <!-- VIBRATION -->
         <section class="card">
 
-            <h2>
-                📳 Vibration
-            </h2>
+            <div class="section-heading">
 
+                <div>
+                    <span class="eyebrow">
+                        DEVICE FEEDBACK
+                    </span>
 
-            <p class="info">
+                    <h2>
+                        Vibration
+                    </h2>
 
-                When a tracked word is detected,
-                your phone will vibrate.
+                    <p class="info">
+                        Your device can provide instant feedback.
+                    </p>
+                </div>
 
-            </p>
+            </div>
 
 
             <div class="vibration-info">
 
-                <div>
+                <div class="vibration-row">
 
-                    <strong>
-                        Android
-                    </strong>
+                    <div class="device-badge">
+                        A
+                    </div>
 
-                    <span>
-                        Chrome and compatible browsers
-                    </span>
+                    <div>
+                        <strong>
+                            Android
+                        </strong>
+
+                        <span>
+                            Chrome and compatible browsers
+                        </span>
+                    </div>
 
                 </div>
 
 
-                <div>
+                <div class="vibration-row">
 
-                    <strong>
-                        iPhone
-                    </strong>
+                    <div class="device-badge">
+                        i
+                    </div>
 
-                    <span>
-                        Browser vibration may not be supported.
-                        Notifications can still alert you.
-                    </span>
+                    <div>
+                        <strong>
+                            iPhone
+                        </strong>
+
+                        <span>
+                            Browser vibration may not be supported.
+                            Notifications can still provide alerts.
+                        </span>
+                    </div>
 
                 </div>
 
@@ -449,167 +504,119 @@
         </section>
 
 
-        <!-- =====================================
-             HOW IT WORKS
-        ====================================== -->
-
+        <!-- HOW IT WORKS -->
         <section class="card">
 
-            <h2>
-                How It Works
-            </h2>
+            <div class="section-heading">
+
+                <div>
+                    <span class="eyebrow">
+                        GET STARTED
+                    </span>
+
+                    <h2>
+                        How It Works
+                    </h2>
+
+                    <p class="info">
+                        A simple loop for improving your speaking.
+                    </p>
+                </div>
+
+            </div>
 
 
             <div class="steps">
 
-
                 <div class="step">
-
-                    <span class="step-number">
-                        1
-                    </span>
+                    <span class="step-number">01</span>
 
                     <div>
-
-                        <strong>
-                            Speak
-                        </strong>
+                        <strong>Speak</strong>
 
                         <p>
                             Tap Listen and talk normally.
                         </p>
-
                     </div>
-
                 </div>
 
 
                 <div class="step">
-
-                    <span class="step-number">
-                        2
-                    </span>
+                    <span class="step-number">02</span>
 
                     <div>
-
-                        <strong>
-                            Live Transcription
-                        </strong>
+                        <strong>Transcribe</strong>
 
                         <p>
-                            Your speech appears on screen
-                            while you talk.
+                            Your speech appears on screen while you talk.
                         </p>
-
                     </div>
-
                 </div>
 
 
                 <div class="step">
-
-                    <span class="step-number">
-                        3
-                    </span>
+                    <span class="step-number">03</span>
 
                     <div>
-
-                        <strong>
-                            Detect
-                        </strong>
+                        <strong>Detect</strong>
 
                         <p>
-                            Tracked words are highlighted
-                            and can trigger notifications.
+                            Tracked words are highlighted and can trigger alerts.
                         </p>
-
                     </div>
-
                 </div>
 
 
                 <div class="step">
-
-                    <span class="step-number">
-                        4
-                    </span>
+                    <span class="step-number">04</span>
 
                     <div>
-
-                        <strong>
-                            AI Transcription
-                        </strong>
+                        <strong>Analyze</strong>
 
                         <p>
-                            OpenAI creates the final
-                            transcription after you stop.
+                            AI examines your completed speech.
                         </p>
-
                     </div>
-
                 </div>
 
 
                 <div class="step">
-
-                    <span class="step-number">
-                        5
-                    </span>
+                    <span class="step-number">05</span>
 
                     <div>
-
-                        <strong>
-                            Improve
-                        </strong>
+                        <strong>Improve</strong>
 
                         <p>
-                            AI analyzes your speech and
-                            gives you feedback.
+                            Use specific feedback to make your next speech stronger.
                         </p>
-
                     </div>
-
                 </div>
-
 
             </div>
 
         </section>
 
 
-        <!-- =====================================
-             FOOTER
-        ====================================== -->
-
+        <!-- FOOTER -->
         <footer>
 
-            Speech Tracker
+            <strong>Speech Tracker</strong>
 
-            <span>
-                •
-            </span>
+            <span class="footer-dot">•</span>
 
             AI Speech Practice
 
-            <br>
-
-            No hardware required
+            <div>
+                No hardware required
+            </div>
 
         </footer>
-
 
     </main>
 
 
-    <!-- =====================================
-         JAVASCRIPT
-    ====================================== -->
-
-    <script
-        src="script.js"
-    ></script>
-
+    <script src="script.js"></script>
 
 </body>
-
 </html>
+```
