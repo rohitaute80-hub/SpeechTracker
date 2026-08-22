@@ -1,14 +1,13 @@
 // ============================================================
 // SPEECH TRACKER
-//
+// ============================================================
 // Live Browser Transcription
 // + OpenAI Final Transcription
 // + Filler Detection
-// + Highlighting
-// + Vibration
-// + Notifications
+// + Single Vibration / Notification
 // + AI Analysis
 // + Dark / Light Mode
+// + Friendly UI
 // ============================================================
 
 
@@ -16,20 +15,13 @@
 // ELEMENTS
 // ============================================================
 
-const statusText =
-    document.getElementById("status");
+const statusText = document.getElementById("status");
+const statusDot = document.getElementById("statusDot");
 
-const statusDot =
-    document.getElementById("statusDot");
+const heardText = document.getElementById("heard");
 
-const heardText =
-    document.getElementById("heard");
-
-const listenButton =
-    document.getElementById("listenButton");
-
-const stopButton =
-    document.getElementById("stopButton");
+const listenButton = document.getElementById("listenButton");
+const stopButton = document.getElementById("stopButton");
 
 const customWordInput =
     document.getElementById("customWordInput");
@@ -60,25 +52,6 @@ const analysisLoading =
 
 
 // ============================================================
-// THEME BUTTON
-// ============================================================
-
-const themeToggle =
-    document.getElementById("themeToggle") ||
-    document.getElementById("themeButton") ||
-    document.querySelector(".theme-toggle");
-
-
-// ============================================================
-// NOTIFICATION BUTTON
-// ============================================================
-
-const enableNotificationsButton =
-    document.getElementById("enableNotifications") ||
-    document.getElementById("enableNotificationsButton");
-
-
-// ============================================================
 // DEFAULT FILLER WORDS
 // ============================================================
 
@@ -87,11 +60,43 @@ const DEFAULT_WORDS = [
     "uh",
     "umm",
     "uhh",
+    "erm",
+    "er",
     "like",
     "you know",
     "basically",
     "literally",
     "actually"
+];
+
+
+// ============================================================
+// SPECIAL LIVE-SPEECH VARIANTS
+// ============================================================
+// Speech recognition sometimes turns:
+//
+// "umm" -> "um"
+// "uhhh" -> "uh"
+// "ummm" -> "um"
+//
+// We therefore treat these forms as fillers too.
+//
+// These are only used for LIVE detection.
+// ============================================================
+
+const LIVE_FILLER_PATTERNS = [
+    {
+        name: "um",
+        regex: /\bumm{0,6}\b/gi
+    },
+    {
+        name: "uh",
+        regex: /\buhh{0,6}\b/gi
+    },
+    {
+        name: "er",
+        regex: /\berr{0,4}\b/gi
+    }
 ];
 
 
@@ -103,13 +108,10 @@ let trackedWords = [];
 
 try {
     const saved =
-        localStorage.getItem(
-            "speechTrackerWords"
-        );
+        localStorage.getItem("speechTrackerWords");
 
     if (saved) {
-        const parsed =
-            JSON.parse(saved);
+        const parsed = JSON.parse(saved);
 
         if (Array.isArray(parsed)) {
             trackedWords = parsed;
@@ -123,61 +125,63 @@ try {
 }
 
 if (trackedWords.length === 0) {
-    trackedWords = [
-        ...DEFAULT_WORDS
-    ];
+    trackedWords = [...DEFAULT_WORDS];
 }
 
 
 // ============================================================
-// RECORDING VARIABLES
+// RECORDING STATE
 // ============================================================
 
 let mediaRecorder = null;
 let audioStream = null;
 let audioChunks = [];
+
 let isRecording = false;
 
 
 // ============================================================
-// LIVE RECOGNITION VARIABLES
+// LIVE RECOGNITION STATE
 // ============================================================
 
 let recognition = null;
 
 let liveRecognitionSupported = false;
 
+let recognitionShouldRun = false;
+
 let liveFinalText = "";
 
 let liveInterimText = "";
 
-let recognitionShouldRun = false;
-
-let recognitionRestartTimer = null;
-
 
 // ============================================================
-// FILLER DETECTION STATE
-//
 // IMPORTANT:
 //
-// We do NOT simply compare the entire transcript every time.
+// These counts prevent duplicate notifications.
 //
-// Browser speech recognition constantly rewrites interim text.
-// Comparing the entire transcript can cause:
+// Example:
 //
-// "um"
-// "um um"
-// "um um um"
+// Live transcript:
+// "I um..."
 //
-// to look like multiple new fillers.
+// Browser revises it:
+// "I um..."
 //
-// Instead we maintain a committed count of fillers.
+// Browser revises it again:
+// "I um..."
+//
+// The count stays 1.
+//
+// We only notify when the highest count increases:
+//
+// 0 -> 1 = notify
+// 1 -> 1 = nothing
+// 1 -> 1 = nothing
+// 1 -> 2 = notify
 // ============================================================
 
-let notifiedFillerCounts = {};
-
-let liveDetectionText = "";
+let peakLiveFillerCounts = {};
 
 
 // ============================================================
@@ -195,82 +199,10 @@ let totalWords = 0;
 // THEME
 // ============================================================
 
-function applyTheme(theme) {
-
-    document.documentElement.setAttribute(
-        "data-theme",
-        theme
-    );
-
-    if (themeToggle) {
-
-        if (theme === "dark") {
-
-            themeToggle.textContent = "☀";
-
-            themeToggle.setAttribute(
-                "aria-label",
-                "Switch to light mode"
-            );
-
-            themeToggle.setAttribute(
-                "title",
-                "Switch to light mode"
-            );
-
-        } else {
-
-            themeToggle.textContent = "☾";
-
-            themeToggle.setAttribute(
-                "aria-label",
-                "Switch to dark mode"
-            );
-
-            themeToggle.setAttribute(
-                "title",
-                "Switch to dark mode"
-            );
-        }
-    }
-
-    try {
-        localStorage.setItem(
-            "speechTrackerTheme",
-            theme
-        );
-    } catch (error) {
-        console.error(
-            "Could not save theme:",
-            error
-        );
-    }
-}
-
-
 function initializeTheme() {
 
-    let savedTheme = null;
-
-    try {
-        savedTheme =
-            localStorage.getItem(
-                "speechTrackerTheme"
-            );
-    } catch (error) {
-        console.error(
-            "Could not load theme:",
-            error
-        );
-    }
-
-    if (
-        savedTheme === "dark" ||
-        savedTheme === "light"
-    ) {
-        applyTheme(savedTheme);
-        return;
-    }
+    const savedTheme =
+        localStorage.getItem("speechTrackerTheme");
 
     const prefersDark =
         window.matchMedia &&
@@ -278,32 +210,165 @@ function initializeTheme() {
             "(prefers-color-scheme: dark)"
         ).matches;
 
-    applyTheme(
-        prefersDark
-            ? "dark"
-            : "light"
-    );
+    const theme =
+        savedTheme ||
+        (prefersDark ? "dark" : "light");
+
+    applyTheme(theme);
+
+    createThemeButton();
 }
 
 
-if (themeToggle) {
+function applyTheme(theme) {
 
-    themeToggle.addEventListener(
-        "click",
-        () => {
-
-            const currentTheme =
-                document.documentElement.getAttribute(
-                    "data-theme"
-                );
-
-            applyTheme(
-                currentTheme === "dark"
-                    ? "light"
-                    : "dark"
-            );
-        }
+    document.documentElement.setAttribute(
+        "data-theme",
+        theme
     );
+
+    document.body.classList.toggle(
+        "dark-mode",
+        theme === "dark"
+    );
+
+    document.body.classList.toggle(
+        "light-mode",
+        theme === "light"
+    );
+
+    localStorage.setItem(
+        "speechTrackerTheme",
+        theme
+    );
+
+    updateThemeButton();
+}
+
+
+function toggleTheme() {
+
+    const current =
+        document.documentElement.getAttribute(
+            "data-theme"
+        ) || "light";
+
+    const next =
+        current === "dark"
+            ? "light"
+            : "dark";
+
+    applyTheme(next);
+}
+
+
+let themeButton = null;
+
+
+function createThemeButton() {
+
+    // Don't create another one if HTML already contains it.
+    themeButton =
+        document.getElementById(
+            "themeToggle"
+        );
+
+    if (!themeButton) {
+
+        themeButton =
+            document.createElement("button");
+
+        themeButton.id =
+            "themeToggle";
+
+        themeButton.type =
+            "button";
+
+        themeButton.setAttribute(
+            "aria-label",
+            "Toggle dark mode"
+        );
+
+        themeButton.style.position =
+            "fixed";
+
+        themeButton.style.top =
+            "18px";
+
+        themeButton.style.right =
+            "18px";
+
+        themeButton.style.zIndex =
+            "9999";
+
+        themeButton.style.width =
+            "44px";
+
+        themeButton.style.height =
+            "44px";
+
+        themeButton.style.borderRadius =
+            "12px";
+
+        themeButton.style.border =
+            "1px solid var(--border, #E4E4E7)";
+
+        themeButton.style.background =
+            "var(--surface, #F4F4F5)";
+
+        themeButton.style.color =
+            "var(--text, #09090B)";
+
+        themeButton.style.cursor =
+            "pointer";
+
+        themeButton.style.fontSize =
+            "20px";
+
+        themeButton.style.display =
+            "flex";
+
+        themeButton.style.alignItems =
+            "center";
+
+        themeButton.style.justifyContent =
+            "center";
+
+        themeButton.style.transition =
+            "all 0.2s ease";
+
+        document.body.appendChild(
+            themeButton
+        );
+    }
+
+    themeButton.onclick =
+        toggleTheme;
+
+    updateThemeButton();
+}
+
+
+function updateThemeButton() {
+
+    if (!themeButton) {
+        return;
+    }
+
+    const theme =
+        document.documentElement.getAttribute(
+            "data-theme"
+        );
+
+    themeButton.textContent =
+        theme === "dark"
+            ? "☀️"
+            : "🌙";
+
+    themeButton.title =
+        theme === "dark"
+            ? "Switch to light mode"
+            : "Switch to dark mode";
 }
 
 
@@ -398,85 +463,7 @@ function escapeRegex(text) {
 
 
 // ============================================================
-// NORMALIZE FILLER WORDS
-//
-// This is especially important for:
-//
-// um
-// umm
-// ummm
-// ummmm
-//
-// uh
-// uhh
-// uhhh
-// uhhhh
-//
-// The browser may transcribe stretched fillers differently.
-// ============================================================
-
-function normalizeFillerWord(word) {
-
-    const cleaned =
-        word
-            .toLowerCase()
-            .trim();
-
-    if (/^u+m+$/.test(cleaned)) {
-        return "um";
-    }
-
-    if (/^u+h+$/.test(cleaned)) {
-        return "uh";
-    }
-
-    return cleaned;
-}
-
-
-// ============================================================
-// IS FILLER WORD
-// ============================================================
-
-function isFillerWord(word) {
-
-    const normalized =
-        normalizeFillerWord(word);
-
-    return (
-        trackedWords.some(
-            tracked =>
-                normalizeFillerWord(
-                    tracked
-                ) === normalized
-        )
-    );
-}
-
-
-// ============================================================
-// GET CANONICAL FILLER NAME
-// ============================================================
-
-function getCanonicalFiller(word) {
-
-    const normalized =
-        normalizeFillerWord(word);
-
-    const match =
-        trackedWords.find(
-            tracked =>
-                normalizeFillerWord(
-                    tracked
-                ) === normalized
-        );
-
-    return match || word;
-}
-
-
-// ============================================================
-// RENDER TRACKED WORDS
+// RENDER WORDS
 // ============================================================
 
 function renderWords() {
@@ -516,6 +503,11 @@ function renderWords() {
 
             remove.textContent =
                 "×";
+
+            remove.setAttribute(
+                "aria-label",
+                `Remove ${word}`
+            );
 
             remove.addEventListener(
                 "click",
@@ -606,36 +598,14 @@ if (resetWordsButton) {
         "click",
         () => {
 
-            trackedWords = [
-                ...DEFAULT_WORDS
-            ];
+            trackedWords =
+                [...DEFAULT_WORDS];
 
             saveWords();
 
             renderWords();
         }
     );
-}
-
-
-// ============================================================
-// TOKENIZE SPEECH
-//
-// This is more reliable for live filler detection than
-// searching the entire string repeatedly.
-// ============================================================
-
-function tokenize(text) {
-
-    if (!text) {
-        return [];
-    }
-
-    return text
-        .toLowerCase()
-        .replace(/[.,!?;:()[\]{}"']/g, " ")
-        .split(/\s+/)
-        .filter(Boolean);
 }
 
 
@@ -647,29 +617,38 @@ function findTrackedWords(text) {
 
     const matches = [];
 
-    if (!text) {
-        return matches;
-    }
+    trackedWords.forEach(
+        word => {
 
-    const tokens =
-        tokenize(text);
+            if (!word.trim()) {
+                return;
+            }
 
-    tokens.forEach(
-        (token, index) => {
+            const regex =
+                new RegExp(
+                    "\\b" +
+                    escapeRegex(word) +
+                    "\\b",
+                    "gi"
+                );
 
-            if (isFillerWord(token)) {
+            let match;
+
+            while (
+                (match = regex.exec(text)) !== null
+            ) {
 
                 matches.push({
-                    word:
-                        getCanonicalFiller(
-                            token
-                        ),
-
-                    tokenIndex:
-                        index
+                    word: word,
+                    index: match.index
                 });
             }
         }
+    );
+
+    matches.sort(
+        (a, b) =>
+            a.index - b.index
     );
 
     return matches;
@@ -682,7 +661,33 @@ function findTrackedWords(text) {
 
 function countTrackedWords(text) {
 
-    return findTrackedWords(text).length;
+    let count = 0;
+
+    trackedWords.forEach(
+        word => {
+
+            if (!word.trim()) {
+                return;
+            }
+
+            const regex =
+                new RegExp(
+                    "\\b" +
+                    escapeRegex(word) +
+                    "\\b",
+                    "gi"
+                );
+
+            const matches =
+                text.match(regex);
+
+            if (matches) {
+                count += matches.length;
+            }
+        }
+    );
+
+    return count;
 }
 
 
@@ -704,16 +709,7 @@ function countTotalWords(text) {
 
 
 // ============================================================
-// HIGHLIGHT FILLERS
-//
-// Handles stretched forms such as:
-//
-// um
-// umm
-// ummm
-// uh
-// uhh
-// uhhh
+// HIGHLIGHT TRACKED WORDS
 // ============================================================
 
 function highlightTrackedWords(text) {
@@ -721,26 +717,11 @@ function highlightTrackedWords(text) {
     let result =
         escapeHTML(text);
 
-    // First handle the special spoken fillers.
-    result =
-        result.replace(
-            /(^|[\s.,!?;:])((?:u+m+|u+h+))(?=$|[\s.,!?;:])/gi,
-            '$1<span class="highlight">$2</span>'
-        );
-
-    // Then handle custom tracked words.
     const sortedWords =
-        [...trackedWords]
-            .filter(
-                word =>
-                    !/^[u]+[mh]+$/i.test(
-                        word
-                    )
-            )
-            .sort(
-                (a, b) =>
-                    b.length - a.length
-            );
+        [...trackedWords].sort(
+            (a, b) =>
+                b.length - a.length
+        );
 
     sortedWords.forEach(
         word => {
@@ -757,8 +738,8 @@ function highlightTrackedWords(text) {
             const regex =
                 new RegExp(
                     "(^|\\s)(" +
-                        escapedWord +
-                        ")(?=\\s|[.,!?;:]|$)",
+                    escapedWord +
+                    ")(?=\\s|[.,!?;:]|$)",
                     "gi"
                 );
 
@@ -877,12 +858,168 @@ function displayLiveTranscript() {
 
 
 // ============================================================
-// STRONG VIBRATION
+// LIVE FILLER COUNTING
+// ============================================================
+
+function getLiveFillerCounts(text) {
+
+    const counts = {};
+
+    trackedWords.forEach(
+        word => {
+            counts[word] = 0;
+        }
+    );
+
+
+    // --------------------------------------------------------
+    // Normal tracked words
+    // --------------------------------------------------------
+
+    trackedWords.forEach(
+        word => {
+
+            if (!word.trim()) {
+                return;
+            }
+
+            const regex =
+                new RegExp(
+                    "\\b" +
+                    escapeRegex(word) +
+                    "\\b",
+                    "gi"
+                );
+
+            const matches =
+                text.match(regex);
+
+            if (matches) {
+
+                counts[word] =
+                    matches.length;
+            }
+        }
+    );
+
+
+    // --------------------------------------------------------
+    // Extra handling for stretched "um"/"uh"
+    // --------------------------------------------------------
+
+    const umMatches =
+        text.match(
+            /\bumm{0,8}\b/gi
+        );
+
+    const uhMatches =
+        text.match(
+            /\buhh{0,8}\b/gi
+        );
+
+    const erMatches =
+        text.match(
+            /\berr{0,5}\b/gi
+        );
+
+
+    if (
+        umMatches &&
+        trackedWords.some(
+            word =>
+                ["um", "umm"].includes(word)
+        )
+    ) {
+
+        const amount =
+            umMatches.length;
+
+        if (trackedWords.includes("um")) {
+            counts.um =
+                Math.max(
+                    counts.um || 0,
+                    amount
+                );
+        }
+
+        if (trackedWords.includes("umm")) {
+            counts.umm =
+                Math.max(
+                    counts.umm || 0,
+                    amount
+                );
+        }
+    }
+
+
+    if (
+        uhMatches &&
+        trackedWords.some(
+            word =>
+                ["uh", "uhh"].includes(word)
+        )
+    ) {
+
+        const amount =
+            uhMatches.length;
+
+        if (trackedWords.includes("uh")) {
+            counts.uh =
+                Math.max(
+                    counts.uh || 0,
+                    amount
+                );
+        }
+
+        if (trackedWords.includes("uhh")) {
+            counts.uhh =
+                Math.max(
+                    counts.uhh || 0,
+                    amount
+                );
+        }
+    }
+
+
+    if (
+        erMatches &&
+        trackedWords.some(
+            word =>
+                ["er", "erm"].includes(word)
+        )
+    ) {
+
+        const amount =
+            erMatches.length;
+
+        if (trackedWords.includes("er")) {
+            counts.er =
+                Math.max(
+                    counts.er || 0,
+                    amount
+                );
+        }
+
+        if (trackedWords.includes("erm")) {
+            counts.erm =
+                Math.max(
+                    counts.erm || 0,
+                    amount
+                );
+        }
+    }
+
+
+    return counts;
+}
+
+
+// ============================================================
+// VIBRATION
+// ============================================================
 //
-// One vibration event per filler.
-//
-// We deliberately do NOT call navigator.vibrate multiple
-// times for the same filler.
+// ONE long vibration.
+// No double vibration pattern.
 // ============================================================
 
 function vibrate() {
@@ -891,8 +1028,9 @@ function vibrate() {
         typeof navigator.vibrate !==
         "function"
     ) {
+
         console.log(
-            "Vibration not supported."
+            "Vibration is not supported."
         );
 
         return;
@@ -900,9 +1038,8 @@ function vibrate() {
 
     try {
 
-        navigator.vibrate(
-            250
-        );
+        // One strong, long vibration.
+        navigator.vibrate(500);
 
     } catch (error) {
 
@@ -921,64 +1058,76 @@ function vibrate() {
 async function notifyFiller(word) {
 
     console.log(
-        "FILLER NOTIFICATION:",
+        "🚨 FILLER DETECTED:",
         word
     );
+
 
     if (
         typeof Notification ===
         "undefined"
     ) {
+
         return;
     }
+
 
     try {
 
         let permission =
             Notification.permission;
 
+
         if (
-            permission ===
-            "default"
+            permission === "default"
         ) {
 
+            // Usually permission will already
+            // have been requested when Listen
+            // was pressed.
             permission =
                 await Notification.requestPermission();
         }
 
+
         if (
-            permission !==
-            "granted"
+            permission !== "granted"
         ) {
 
             console.log(
-                "Notification permission:",
+                "Notifications not granted:",
                 permission
             );
 
             return;
         }
 
+
         const notification =
             new Notification(
-                "Filler Word Detected",
+                "Speech Tracker",
                 {
                     body:
-                        `You said "${word}"`,
+                        `Filler word detected: "${word}"`,
                     tag:
                         "speech-tracker-filler",
                     renotify:
-                        true
+                        false,
+                    silent:
+                        false
                 }
             );
 
+
         setTimeout(
             () => {
+
                 try {
                     notification.close();
                 } catch (error) {}
+
             },
-            1800
+            2500
         );
 
     } catch (error) {
@@ -995,145 +1144,189 @@ async function notifyFiller(word) {
 // HANDLE ONE NEW FILLER
 // ============================================================
 
-async function handleNewFiller(word) {
+function handleNewFiller(word) {
 
     console.log(
-        "NEW FILLER DETECTED:",
+        "⚡ NEW FILLER:",
         word
     );
+
 
     // ONE vibration.
     vibrate();
 
+
     // ONE notification.
-    await notifyFiller(word);
+    notifyFiller(word);
+
+
+    // Small visual feedback.
+    flashFillerFeedback(word);
 }
 
 
 // ============================================================
-// COUNT FILLERS BY TYPE
+// VISUAL FILLER FEEDBACK
 // ============================================================
 
-function getFillerCounts(text) {
+function flashFillerFeedback(word) {
 
-    const counts = {};
-
-    const matches =
-        findTrackedWords(text);
-
-    matches.forEach(
-        match => {
-
-            const word =
-                match.word;
-
-            counts[word] =
-                (counts[word] || 0) + 1;
-        }
+    document.body.classList.remove(
+        "filler-detected"
     );
 
-    return counts;
+    // Force browser to recognize
+    // the class being removed/re-added.
+    void document.body.offsetWidth;
+
+    document.body.classList.add(
+        "filler-detected"
+    );
+
+
+    setTimeout(
+        () => {
+
+            document.body.classList.remove(
+                "filler-detected"
+            );
+
+        },
+        450
+    );
+
+
+    if (statusText) {
+
+        const oldStatus =
+            statusText.textContent;
+
+        statusText.textContent =
+            `⚠️ "${word}" detected`;
+
+        setTimeout(
+            () => {
+
+                if (isRecording) {
+
+                    statusText.textContent =
+                        "Recording...";
+                }
+
+            },
+            700
+        );
+    }
 }
 
 
 // ============================================================
 // PROCESS LIVE FILLERS
+// ============================================================
 //
-// This fixes the duplicate-notification problem.
+// THIS IS THE IMPORTANT PART.
 //
-// Browser interim recognition constantly changes.
+// We do NOT compare the current transcript against
+// the previous transcript directly.
 //
-// Example:
+// Instead, we remember the highest number of
+// each filler that has ever appeared.
 //
-// First:
-// "I um"
+// This prevents:
 //
-// Then:
-// "I umm"
+// "um"
+// "um"
+// "um"
+// "um"
 //
-// Then:
-// "I umm I"
+// from causing four notifications.
 //
-// We don't treat those as 3 fillers.
+// But:
 //
-// We only notify when the number of committed fillers
-// increases.
+// "um"
+// "um ..."
+// "um ... uh"
+//
+// correctly causes:
+//
+// notification -> um
+// notification -> uh
 // ============================================================
 
-async function processLiveFillers(text) {
+function processLiveFillers(text) {
 
-    if (!text) {
+    if (!text || !text.trim()) {
         return;
     }
 
+
     const currentCounts =
-        getFillerCounts(text);
+        getLiveFillerCounts(text);
 
-    const wordsToNotify = [];
-
-    Object.keys(currentCounts).forEach(
-        word => {
-
-            const current =
-                currentCounts[word] || 0;
-
-            const previous =
-                notifiedFillerCounts[word] || 0;
-
-            if (current > previous) {
-
-                const difference =
-                    current - previous;
-
-                // Queue exactly one notification
-                // for each genuinely new occurrence.
-                for (
-                    let i = 0;
-                    i < difference;
-                    i++
-                ) {
-
-                    wordsToNotify.push(
-                        word
-                    );
-                }
-            }
-        }
-    );
-
-    // Update state BEFORE notifications.
-    //
-    // This is important because the browser can fire
-    // another recognition event while the notification
-    // is being processed.
-    notifiedFillerCounts =
-        {
-            ...currentCounts
-        };
 
     for (
-        const word of wordsToNotify
+        const word of trackedWords
     ) {
 
-        await handleNewFiller(
-            word
-        );
-    }
+        const current =
+            currentCounts[word] || 0;
 
-    liveDetectionText =
-        text;
+        const previousPeak =
+            peakLiveFillerCounts[word] || 0;
+
+
+        // Only fire when the total number
+        // of occurrences has increased.
+        if (
+            current >
+            previousPeak
+        ) {
+
+            const difference =
+                current -
+                previousPeak;
+
+
+            // If two NEW filler occurrences
+            // somehow arrive in one update,
+            // notify once for each actual occurrence.
+            //
+            // This still NEVER repeats the same
+            // occurrence from interim revisions.
+
+            for (
+                let i = 0;
+                i < difference;
+                i++
+            ) {
+
+                handleNewFiller(
+                    word
+                );
+            }
+
+
+            peakLiveFillerCounts[word] =
+                current;
+        }
+    }
 }
 
 
 // ============================================================
-// RESET FILLER DETECTION
+// RESET LIVE FILLER TRACKING
 // ============================================================
 
-function resetFillerDetection() {
+function resetLiveFillerTracking() {
 
-    notifiedFillerCounts = {};
+    peakLiveFillerCounts = {};
 
-    liveDetectionText = "";
+    trackedWords.forEach(
+        word => {
+            peakLiveFillerCounts[word] =
+                0;
+        }
+    );
 }
 
 
@@ -1147,6 +1340,7 @@ function setupLiveRecognition() {
         window.SpeechRecognition ||
         window.webkitSpeechRecognition;
 
+
     if (!SpeechRecognition) {
 
         console.log(
@@ -1159,49 +1353,47 @@ function setupLiveRecognition() {
         return;
     }
 
+
     liveRecognitionSupported =
         true;
+
 
     recognition =
         new SpeechRecognition();
 
+
     recognition.continuous =
         true;
+
 
     recognition.interimResults =
         true;
 
+
     recognition.lang =
         "en-US";
+
 
     recognition.maxAlternatives =
         1;
 
 
-    // ========================================================
-    // ON START
-    // ========================================================
+    // --------------------------------------------------------
+    // START
+    // --------------------------------------------------------
 
     recognition.onstart =
         () => {
 
             console.log(
-                "LIVE RECOGNITION STARTED"
+                "🎤 LIVE RECOGNITION STARTED"
             );
-
-            if (isRecording) {
-
-                setStatus(
-                    "Listening...",
-                    "listening"
-                );
-            }
         };
 
 
-    // ========================================================
-    // ON RESULT
-    // ========================================================
+    // --------------------------------------------------------
+    // RESULT
+    // --------------------------------------------------------
 
     recognition.onresult =
         event => {
@@ -1214,12 +1406,8 @@ function setupLiveRecognition() {
 
 
             for (
-                let i =
-                    event.resultIndex;
-
-                i <
-                event.results.length;
-
+                let i = event.resultIndex;
+                i < event.results.length;
                 i++
             ) {
 
@@ -1228,6 +1416,7 @@ function setupLiveRecognition() {
 
                 const text =
                     result[0].transcript;
+
 
                 if (
                     result.isFinal
@@ -1244,7 +1433,7 @@ function setupLiveRecognition() {
             }
 
 
-            // Add only newly finalized speech.
+            // Add newly finalized speech.
             if (newFinalText) {
 
                 liveFinalText +=
@@ -1252,6 +1441,7 @@ function setupLiveRecognition() {
             }
 
 
+            // Current changing interim speech.
             liveInterimText =
                 newInterimText;
 
@@ -1264,23 +1454,22 @@ function setupLiveRecognition() {
                 ).trim();
 
 
-            // Immediately update UI.
+            // Update UI immediately.
             displayLiveTranscript();
 
 
-            // Immediately check fillers.
-            //
-            // This happens BEFORE waiting for
-            // the final OpenAI transcription.
+            // MOST IMPORTANT:
+            // Process the current live transcript,
+            // including INTERIM results.
             processLiveFillers(
                 combined
             );
         };
 
 
-    // ========================================================
-    // ON ERROR
-    // ========================================================
+    // --------------------------------------------------------
+    // ERROR
+    // --------------------------------------------------------
 
     recognition.onerror =
         event => {
@@ -1290,17 +1479,41 @@ function setupLiveRecognition() {
                 event.error
             );
 
-            if (!recognitionShouldRun) {
+
+            if (
+                !recognitionShouldRun
+            ) {
                 return;
             }
+
 
             if (
                 event.error ===
                 "not-allowed"
             ) {
 
+                setStatus(
+                    "Microphone permission needed",
+                    "error"
+                );
+
+            } else if (
+                event.error ===
+                "audio-capture"
+            ) {
+
+                setStatus(
+                    "Microphone unavailable",
+                    "error"
+                );
+
+            } else if (
+                event.error ===
+                "network"
+            ) {
+
                 console.log(
-                    "Microphone/speech recognition permission denied."
+                    "Speech recognition network error."
                 );
 
             } else if (
@@ -1311,29 +1524,13 @@ function setupLiveRecognition() {
                 console.log(
                     "No speech detected."
                 );
-
-            } else if (
-                event.error ===
-                "aborted"
-            ) {
-
-                console.log(
-                    "Speech recognition aborted."
-                );
-
-            } else {
-
-                console.log(
-                    "Speech recognition error:",
-                    event.error
-                );
             }
         };
 
 
-    // ========================================================
-    // ON END
-    // ========================================================
+    // --------------------------------------------------------
+    // END
+    // --------------------------------------------------------
 
     recognition.onend =
         () => {
@@ -1342,40 +1539,39 @@ function setupLiveRecognition() {
                 "LIVE RECOGNITION ENDED"
             );
 
+
+            // Restart automatically while
+            // the user is still recording.
             if (
                 recognitionShouldRun &&
                 isRecording
             ) {
 
-                clearTimeout(
-                    recognitionRestartTimer
+                setTimeout(
+                    () => {
+
+                        if (
+                            !recognitionShouldRun ||
+                            !isRecording
+                        ) {
+                            return;
+                        }
+
+
+                        try {
+
+                            recognition.start();
+
+                        } catch (error) {
+
+                            console.log(
+                                "Recognition restart skipped."
+                            );
+                        }
+
+                    },
+                    100
                 );
-
-                recognitionRestartTimer =
-                    setTimeout(
-                        () => {
-
-                            if (
-                                recognitionShouldRun &&
-                                isRecording
-                            ) {
-
-                                try {
-
-                                    recognition.start();
-
-                                } catch (error) {
-
-                                    console.log(
-                                        "Recognition restart skipped:",
-                                        error
-                                    );
-                                }
-                            }
-
-                        },
-                        50
-                    );
             }
         };
 }
@@ -1399,16 +1595,20 @@ function startLiveRecognition() {
         return;
     }
 
+
     liveFinalText =
         "";
 
     liveInterimText =
         "";
 
-    resetFillerDetection();
+
+    resetLiveFillerTracking();
+
 
     recognitionShouldRun =
         true;
+
 
     try {
 
@@ -1432,13 +1632,11 @@ function stopLiveRecognition() {
     recognitionShouldRun =
         false;
 
-    clearTimeout(
-        recognitionRestartTimer
-    );
 
     if (!recognition) {
         return;
     }
+
 
     try {
 
@@ -1476,14 +1674,17 @@ function getRecordingMimeType() {
         typeof MediaRecorder ===
         "undefined"
     ) {
+
         return "";
     }
+
 
     const formats = [
         "audio/webm;codecs=opus",
         "audio/webm",
         "audio/mp4"
     ];
+
 
     for (
         const format of formats
@@ -1503,7 +1704,70 @@ function getRecordingMimeType() {
         } catch (error) {}
     }
 
+
     return "";
+}
+
+
+// ============================================================
+// REQUEST NOTIFICATION PERMISSION
+// ============================================================
+
+async function requestNotificationPermission() {
+
+    if (
+        typeof Notification ===
+        "undefined"
+    ) {
+
+        return false;
+    }
+
+
+    try {
+
+        if (
+            Notification.permission ===
+            "granted"
+        ) {
+
+            return true;
+        }
+
+
+        if (
+            Notification.permission ===
+            "denied"
+        ) {
+
+            return false;
+        }
+
+
+        const permission =
+            await Notification.requestPermission();
+
+
+        console.log(
+            "Notification permission:",
+            permission
+        );
+
+
+        return (
+            permission ===
+            "granted"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Notification permission error:",
+            error
+        );
+
+        return false;
+    }
 }
 
 
@@ -1516,6 +1780,7 @@ async function startRecording() {
     if (isRecording) {
         return;
     }
+
 
     if (!checkMicrophoneSupport()) {
 
@@ -1531,14 +1796,28 @@ async function startRecording() {
         return;
     }
 
+
     try {
 
+        // Request notifications during the
+        // user's button click.
+        //
+        // This is much better than waiting
+        // until the first "um".
+        requestNotificationPermission();
+
+
+        // Ask for microphone.
         audioStream =
-            await navigator
-                .mediaDevices
-                .getUserMedia({
-                    audio: true
-                });
+            await navigator.mediaDevices.getUserMedia(
+                {
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                }
+            );
 
 
         audioChunks = [];
@@ -1568,9 +1847,9 @@ async function startRecording() {
         }
 
 
-        // ====================================================
+        // ----------------------------------------------------
         // AUDIO DATA
-        // ====================================================
+        // ----------------------------------------------------
 
         mediaRecorder.addEventListener(
             "dataavailable",
@@ -1589,9 +1868,9 @@ async function startRecording() {
         );
 
 
-        // ====================================================
+        // ----------------------------------------------------
         // RECORDING STOPPED
-        // ====================================================
+        // ----------------------------------------------------
 
         mediaRecorder.addEventListener(
             "stop",
@@ -1605,6 +1884,7 @@ async function startRecording() {
                         )
                 );
 
+
                 await sendRecording();
             },
             {
@@ -1613,40 +1893,66 @@ async function startRecording() {
         );
 
 
-        // Small chunks.
-        mediaRecorder.start(
-            250
-        );
+        // Smaller timeslice gives us
+        // audio chunks sooner.
+        mediaRecorder.start(250);
 
 
         isRecording =
             true;
 
 
-        // Start live recognition immediately.
+        resetLiveFillerTracking();
+
+
+        // Start live transcription.
         startLiveRecognition();
 
 
         if (listenButton) {
+
             listenButton.disabled =
                 true;
+
+            listenButton.classList.add(
+                "recording"
+            );
         }
 
 
         if (stopButton) {
+
             stopButton.disabled =
                 false;
         }
 
 
         setStatus(
-            "Listening...",
+            "Recording...",
             "listening"
         );
 
 
         showMessage(
             "🎤 Listening... start speaking."
+        );
+
+
+        console.log(
+            "================================"
+        );
+
+        console.log(
+            "RECORDING STARTED"
+        );
+
+        console.log(
+            "Live recognition:",
+            liveRecognitionSupported
+        );
+
+        console.log(
+            "================================"
         );
 
 
@@ -1657,8 +1963,10 @@ async function startRecording() {
             error
         );
 
+
         isRecording =
             false;
+
 
         stopLiveRecognition();
 
@@ -1703,15 +2011,16 @@ function stopRecording() {
         !mediaRecorder ||
         !isRecording
     ) {
+
         return;
     }
 
+
     console.log(
-        "STOP PRESSED"
+        "🛑 STOP PRESSED"
     );
 
 
-    // Stop recognition first.
     stopLiveRecognition();
 
 
@@ -1747,12 +2056,18 @@ function stopRecording() {
 
 
     if (listenButton) {
+
         listenButton.disabled =
             false;
+
+        listenButton.classList.remove(
+            "recording"
+        );
     }
 
 
     if (stopButton) {
+
         stopButton.disabled =
             true;
     }
@@ -1763,9 +2078,6 @@ function stopRecording() {
         "listening"
     );
 
-
-    // Keep the live transcript visible
-    // while OpenAI processes it.
 
     const liveText =
         (
@@ -1790,7 +2102,7 @@ function stopRecording() {
 
 
 // ============================================================
-// LISTEN BUTTON
+// BUTTONS
 // ============================================================
 
 if (listenButton) {
@@ -1801,10 +2113,6 @@ if (listenButton) {
     );
 }
 
-
-// ============================================================
-// STOP BUTTON
-// ============================================================
 
 if (stopButton) {
 
@@ -1824,8 +2132,7 @@ async function sendRecording() {
     try {
 
         if (
-            audioChunks.length ===
-            0
+            audioChunks.length === 0
         ) {
 
             throw new Error(
@@ -1877,6 +2184,7 @@ async function sendRecording() {
                         bytes.length
                     )
                 );
+
 
             binary +=
                 String.fromCharCode(
@@ -1950,7 +2258,7 @@ async function sendRecording() {
         if (
             !data.transcript ||
             typeof data.transcript !==
-                "string"
+            "string"
         ) {
 
             throw new Error(
@@ -1965,8 +2273,8 @@ async function sendRecording() {
         );
 
 
-        // Replace the less accurate live
-        // transcript with OpenAI's final one.
+        // Replace browser transcript
+        // with the more accurate OpenAI result.
         displayTranscript(
             data.transcript
         );
@@ -2001,7 +2309,8 @@ async function sendRecording() {
         );
 
 
-        // Keep live transcript if API fails.
+        // Keep live transcript if
+        // final API fails.
         if (
             !liveFinalText.trim() &&
             !liveInterimText.trim()
@@ -2010,6 +2319,12 @@ async function sendRecording() {
             showMessage(
                 "Transcription failed: " +
                 error.message
+            );
+
+        } else {
+
+            showMessage(
+                "Final transcription failed. Live transcript is still available."
             );
         }
     }
@@ -2026,6 +2341,7 @@ async function analyzeSpeech() {
         !finalTranscript ||
         !finalTranscript.trim()
     ) {
+
         return;
     }
 
@@ -2047,7 +2363,7 @@ async function analyzeSpeech() {
     if (analysisElement) {
 
         analysisElement.innerHTML =
-            "";
+            "Analyzing your speech...";
     }
 
 
@@ -2118,24 +2434,13 @@ async function analyzeSpeech() {
         if (!data.analysis) {
 
             throw new Error(
-                "OpenAI returned an empty analysis."
+                "The AI returned an empty analysis."
             );
         }
 
 
-        // Your API may return either:
-        //
-        // analysis: "text"
-        //
-        // OR
-        //
-        // analysis: {
-        //    overall: "...",
-        //    fillerWords: "...",
-        //    ...
-        // }
-        //
-        // Handle both.
+        // The API may return an object
+        // or a string depending on your endpoint.
 
         if (
             typeof data.analysis ===
@@ -2173,7 +2478,6 @@ async function analyzeSpeech() {
                 );
         }
 
-
     } finally {
 
         if (analysisLoading) {
@@ -2193,7 +2497,7 @@ async function analyzeSpeech() {
 
 
 // ============================================================
-// FORMAT AI ANALYSIS OBJECT
+// FORMAT AI ANALYSIS
 // ============================================================
 
 function formatAnalysisObject(
@@ -2203,10 +2507,12 @@ function formatAnalysisObject(
     if (
         !analysis ||
         typeof analysis !==
-            "object"
+        "object"
     ) {
 
-        return "";
+        return String(
+            analysis || ""
+        );
     }
 
 
@@ -2216,7 +2522,7 @@ function formatAnalysisObject(
     if (analysis.overall) {
 
         sections.push(
-            "Overall\n" +
+            "OVERALL\n" +
             analysis.overall
         );
     }
@@ -2225,7 +2531,7 @@ function formatAnalysisObject(
     if (analysis.fillerWords) {
 
         sections.push(
-            "Filler Words\n" +
+            "FILLER WORDS\n" +
             analysis.fillerWords
         );
     }
@@ -2234,7 +2540,7 @@ function formatAnalysisObject(
     if (analysis.clarity) {
 
         sections.push(
-            "Clarity\n" +
+            "CLARITY\n" +
             analysis.clarity
         );
     }
@@ -2243,7 +2549,7 @@ function formatAnalysisObject(
     if (analysis.strength) {
 
         sections.push(
-            "Strength\n" +
+            "STRENGTH\n" +
             analysis.strength
         );
     }
@@ -2252,7 +2558,7 @@ function formatAnalysisObject(
     if (analysis.improvement) {
 
         sections.push(
-            "Improvement\n" +
+            "IMPROVEMENT\n" +
             analysis.improvement
         );
     }
@@ -2261,7 +2567,7 @@ function formatAnalysisObject(
     if (analysis.tip) {
 
         sections.push(
-            "Practical Tip\n" +
+            "TIP\n" +
             analysis.tip
         );
     }
@@ -2285,9 +2591,7 @@ function displayAnalysis(text) {
 
 
     analysisElement.innerHTML =
-        escapeHTML(
-            text
-        )
+        escapeHTML(text)
             .replace(
                 /\n\n+/g,
                 "<br><br>"
@@ -2313,10 +2617,19 @@ if (analyzeButton) {
 
 
 // ============================================================
-// REQUEST NOTIFICATION PERMISSION
+// NOTIFICATION BUTTON
 // ============================================================
 
-async function requestNotificationPermission() {
+const enableNotificationsButton =
+    document.getElementById(
+        "enableNotifications"
+    ) ||
+    document.getElementById(
+        "enableNotificationsButton"
+    );
+
+
+async function enableNotifications() {
 
     if (
         typeof Notification ===
@@ -2331,79 +2644,60 @@ async function requestNotificationPermission() {
     }
 
 
-    try {
-
-        const permission =
-            await Notification.requestPermission();
+    const granted =
+        await requestNotificationPermission();
 
 
-        console.log(
-            "Notification permission:",
-            permission
-        );
-
+    if (granted) {
 
         if (
-            permission ===
-            "granted"
+            enableNotificationsButton
         ) {
 
-            if (
-                enableNotificationsButton
-            ) {
-
-                enableNotificationsButton.textContent =
-                    "✅ Notifications Enabled";
-            }
-
-
-            const notification =
-                new Notification(
-                    "Speech Tracker",
-                    {
-                        body:
-                            "Notifications are working!"
-                    }
-                );
-
-
-            setTimeout(
-                () => {
-                    try {
-                        notification.close();
-                    } catch (error) {}
-                },
-                1500
-            );
-
-
-        } else {
-
-            if (
-                enableNotificationsButton
-            ) {
-
-                enableNotificationsButton.textContent =
-                    "⚠️ Notifications Not Allowed";
-            }
+            enableNotificationsButton.textContent =
+                "✅ Notifications Enabled";
         }
 
 
-    } catch (error) {
+        // Test notification.
+        try {
 
-        console.error(
-            "Notification permission error:",
-            error
-        );
+            new Notification(
+                "Speech Tracker",
+                {
+                    body:
+                        "Notifications are working!"
+                }
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Test notification failed:",
+                error
+            );
+        }
+
+    } else {
+
+        if (
+            enableNotificationsButton
+        ) {
+
+            enableNotificationsButton.textContent =
+                "⚠️ Notifications Not Allowed";
+        }
     }
 }
 
 
-if (enableNotificationsButton) {
+if (
+    enableNotificationsButton
+) {
 
     enableNotificationsButton.addEventListener(
         "click",
-        requestNotificationPermission
+        enableNotifications
     );
 }
 
@@ -2418,10 +2712,14 @@ setupLiveRecognition();
 
 renderWords();
 
+resetLiveFillerTracking();
+
+
 setStatus(
     "Ready",
     "ready"
 );
+
 
 showMessage(
     "Tap Listen and start speaking."
@@ -2451,7 +2749,11 @@ console.log(
 );
 
 console.log(
-    "Speech Tracker loaded"
+    "🎤 SPEECH TRACKER LOADED"
+);
+
+console.log(
+    "======================================"
 );
 
 console.log(
@@ -2470,13 +2772,13 @@ console.log(
 console.log(
     "Vibration:",
     typeof navigator.vibrate ===
-        "function"
+    "function"
 );
 
 console.log(
     "Notifications:",
     typeof Notification !==
-        "undefined"
+    "undefined"
 );
 
 if (
