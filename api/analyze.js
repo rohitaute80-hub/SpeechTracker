@@ -1,4 +1,8 @@
 export default async function handler(req, res) {
+    // ============================================================
+    // METHOD CHECK
+    // ============================================================
+
     if (req.method !== "POST") {
         return res.status(405).json({
             error: "Method not allowed"
@@ -6,9 +10,9 @@ export default async function handler(req, res) {
     }
 
     try {
-        // =====================================================
+        // ========================================================
         // CHECK API KEY
-        // =====================================================
+        // ========================================================
 
         if (!process.env.OPENAI_API_KEY) {
             return res.status(500).json({
@@ -16,10 +20,9 @@ export default async function handler(req, res) {
             });
         }
 
-
-        // =====================================================
+        // ========================================================
         // GET TRANSCRIPT
-        // =====================================================
+        // ========================================================
 
         const { transcript } = req.body || {};
 
@@ -32,10 +35,11 @@ export default async function handler(req, res) {
             });
         }
 
+        const cleanTranscript = transcript.trim();
 
-        // =====================================================
-        // CALL OPENAI
-        // =====================================================
+        // ========================================================
+        // OPENAI REQUEST
+        // ========================================================
 
         const response = await fetch(
             "https://api.openai.com/v1/chat/completions",
@@ -49,131 +53,254 @@ export default async function handler(req, res) {
                 },
 
                 body: JSON.stringify({
-
                     model: "gpt-4o-mini",
 
                     temperature: 0.4,
 
+                    max_completion_tokens: 1800,
+
                     response_format: {
-                        type: "json_object"
+                        type: "json_schema",
+
+                        json_schema: {
+                            name: "speech_analysis",
+
+                            strict: true,
+
+                            schema: {
+                                type: "object",
+
+                                additionalProperties: false,
+
+                                properties: {
+                                    overall: {
+                                        type: "string"
+                                    },
+
+                                    sections: {
+                                        type: "array",
+
+                                        items: {
+                                            type: "object",
+
+                                            additionalProperties: false,
+
+                                            properties: {
+                                                sectionName: {
+                                                    type: "string"
+                                                },
+
+                                                summary: {
+                                                    type: "string"
+                                                },
+
+                                                whatWorked: {
+                                                    type: "string"
+                                                },
+
+                                                whatToImprove: {
+                                                    type: "string"
+                                                },
+
+                                                specificExample: {
+                                                    type: "string"
+                                                }
+                                            },
+
+                                            required: [
+                                                "sectionName",
+                                                "summary",
+                                                "whatWorked",
+                                                "whatToImprove",
+                                                "specificExample"
+                                            ]
+                                        }
+                                    },
+
+                                    fillerWords: {
+                                        type: "object",
+
+                                        additionalProperties: false,
+
+                                        properties: {
+                                            summary: {
+                                                type: "string"
+                                            },
+
+                                            wordsFound: {
+                                                type: "array",
+
+                                                items: {
+                                                    type: "string"
+                                                }
+                                            },
+
+                                            advice: {
+                                                type: "string"
+                                            }
+                                        },
+
+                                        required: [
+                                            "summary",
+                                            "wordsFound",
+                                            "advice"
+                                        ]
+                                    },
+
+                                    clarity: {
+                                        type: "string"
+                                    },
+
+                                    structure: {
+                                        type: "string"
+                                    },
+
+                                    delivery: {
+                                        type: "string"
+                                    },
+
+                                    strengths: {
+                                        type: "array",
+
+                                        items: {
+                                            type: "string"
+                                        }
+                                    },
+
+                                    improvements: {
+                                        type: "array",
+
+                                        items: {
+                                            type: "string"
+                                        }
+                                    },
+
+                                    tips: {
+                                        type: "array",
+
+                                        items: {
+                                            type: "string"
+                                        }
+                                    }
+                                },
+
+                                required: [
+                                    "overall",
+                                    "sections",
+                                    "fillerWords",
+                                    "clarity",
+                                    "structure",
+                                    "delivery",
+                                    "strengths",
+                                    "improvements",
+                                    "tips"
+                                ]
+                            }
+                        }
                     },
 
                     messages: [
-
                         {
                             role: "system",
 
                             content: `
-You are an expert public speaking coach.
+You are an expert public speaking coach analyzing a real speech transcript.
 
-Analyze the user's speech transcript extremely carefully.
-
-Your feedback MUST be based on the actual transcript.
+Your job is to give highly specific, useful feedback based ONLY on the actual transcript.
 
 Do NOT give generic public-speaking advice.
 
-Your job is to give the speaker a detailed, useful review of their speech.
+Analyze the speech as a whole AND break it into meaningful sections.
 
-Analyze:
+For example, sections could include:
+- Opening
+- Introduction of the topic
+- Main point 1
+- Main point 2
+- Main point 3
+- Explanation
+- Evidence/examples
+- Transitions
+- Conclusion
 
-1. OVERALL SPEECH
-Give a detailed overview of how the speech went.
+Only create sections that actually exist in the transcript.
 
-2. SPEECH SECTIONS
-Break the speech into meaningful sections based on changes in topic, argument, story, example, or idea.
+For every section:
+1. Explain what the speaker was doing.
+2. Identify what worked.
+3. Identify exactly what could be improved.
+4. Give a specific example from the transcript.
 
-For EACH section:
-- identify what the speaker was talking about
-- explain what worked
-- identify unclear or weak parts
-- identify unnecessary repetition or rambling
-- explain how the section could be improved
-- comment on transitions into or out of the section when relevant
+Be especially attentive to:
 
-3. FILLER WORDS
-Look carefully for:
-- um
-- uh
-- umm
-- uhh
-- like
-- you know
-- basically
-- literally
-- actually
-
-Only discuss filler words that actually appear.
-
-If possible, mention examples from the transcript.
-
-4. CLARITY
-Identify specific sentences, phrases, or ideas that were difficult to understand.
-
-Explain exactly how the speaker could make them clearer.
-
-5. ORGANIZATION
-Analyze whether the speech has a clear beginning, middle, and ending.
-
-Look for:
-- weak introductions
-- abrupt topic changes
-- missing transitions
-- repeated points
-- ideas that appear out of order
-- weak conclusions
-
-6. CONCISENESS
-Identify places where the speaker could say the same thing more efficiently.
-
-7. STRENGTHS
-Identify specific things the speaker did well.
-
-8. MOST IMPORTANT IMPROVEMENT
-Give the single most important change this speaker should make.
-
-9. PRACTICAL TIP
-Give one specific exercise or technique tailored to this speech.
+- "um"
+- "uh"
+- "umm"
+- "uhh"
+- "like"
+- "you know"
+- "basically"
+- "literally"
+- "actually"
+- repeated words
+- repeated ideas
+- unnecessary phrases
+- rambling
+- unclear wording
+- vague statements
+- overly long sentences
+- weak transitions
+- abrupt transitions
+- unnecessary pauses represented by filler words
+- places where the speaker could be more concise
+- places where the speaker sounds confident
+- strong explanations
+- strong examples
+- strong organization
 
 IMPORTANT:
 
-The feedback should be specific.
+If filler words appear, explicitly identify the actual filler words found.
 
-Do not say things like:
-"Work on your confidence."
-"Practice more."
-"Use better transitions."
+Do not claim that a filler word was used if it does not appear in the transcript.
 
-Instead explain exactly WHAT the speaker should change and WHY.
+For filler-word feedback:
+- Identify the words actually found.
+- Explain where they appear when possible.
+- Explain whether they seem to interrupt the flow.
+- Give a practical replacement behavior.
 
-Return ONLY valid JSON.
+The feedback should be pointed.
 
-The JSON must have exactly these fields:
+Instead of:
 
-{
-    "overall": "Detailed overall assessment.",
-    "sections": [
-        {
-            "title": "Section name",
-            "summary": "What this section was about.",
-            "whatWorked": "What worked well.",
-            "whatToImprove": "Specific problems and improvements.",
-            "transition": "Feedback on the transition involving this section."
-        }
-    ],
-    "fillerWords": "Specific feedback about filler words actually found.",
-    "clarity": "Specific feedback about clarity and wording.",
-    "organization": "Specific feedback about organization and flow.",
-    "conciseness": "Specific feedback about unnecessary words, repetition, or rambling.",
-    "strengths": "Specific strengths demonstrated in this transcript.",
-    "improvement": "The single most important improvement the speaker should make.",
-    "tip": "One practical exercise or speaking technique tailored to this transcript."
-}
+"Try to use fewer filler words."
 
-Do not use Markdown.
+Say something like:
 
-Do not wrap the JSON in backticks.
+"You repeatedly use 'um' immediately before introducing your next idea. Instead of filling that gap with 'um,' pause silently for about a second and then start the next sentence."
 
-Do not add any text before or after the JSON.
+For the section analysis, be detailed enough that the speaker can understand exactly what happened in different parts of their speech.
+
+The overall assessment should summarize the most important patterns.
+
+The clarity section should focus on whether ideas are easy to understand.
+
+The structure section should evaluate organization, progression of ideas, transitions, opening, and conclusion.
+
+The delivery section should infer speech-flow characteristics ONLY from the transcript. Do not claim to know tone, volume, facial expressions, or body language because those cannot reliably be determined from text alone.
+
+Strengths should contain several specific strengths when possible.
+
+Improvements should contain several specific, actionable improvements.
+
+Tips should contain practical exercises the speaker can use in their next speech.
+
+Never invent quotes or examples that do not appear in the transcript.
+
+Do not mention that you are an AI.
+
+Return only the structured response matching the supplied JSON schema.
 `
                         },
 
@@ -181,20 +308,18 @@ Do not add any text before or after the JSON.
                             role: "user",
 
                             content:
-                                `Here is the speech transcript:
+                                `Analyze this speech transcript:
 
-${transcript}`
+${cleanTranscript}`
                         }
-
                     ]
                 })
             }
         );
 
-
-        // =====================================================
+        // ========================================================
         // READ OPENAI RESPONSE
-        // =====================================================
+        // ========================================================
 
         const responseText = await response.text();
 
@@ -208,381 +333,399 @@ ${transcript}`
             responseText
         );
 
-
-        // =====================================================
-        // OPENAI ERROR
-        // =====================================================
+        // ========================================================
+        // CHECK HTTP ERROR
+        // ========================================================
 
         if (!response.ok) {
+            let errorDetails = responseText;
+
+            try {
+                errorDetails = JSON.parse(responseText);
+            } catch {
+                // Keep original text
+            }
 
             return res.status(response.status).json({
                 error: "OpenAI analysis failed",
-                details: responseText
+                details: errorDetails
             });
-
         }
 
-
-        // =====================================================
-        // PARSE OPENAI API RESPONSE
-        // =====================================================
+        // ========================================================
+        // PARSE OPENAI RESPONSE
+        // ========================================================
 
         let data;
 
         try {
-
             data = JSON.parse(responseText);
-
         } catch (error) {
-
             console.error(
-                "Could not parse OpenAI API response:",
+                "Could not parse OpenAI HTTP response:",
                 error
             );
 
             return res.status(500).json({
-                error: "OpenAI returned invalid API JSON",
+                error: "OpenAI returned invalid response data",
                 details: responseText
             });
-
         }
 
+        // ========================================================
+        // CHECK FOR REFUSAL
+        // ========================================================
 
-        // =====================================================
-        // GET MODEL CONTENT
-        // =====================================================
+        const message = data?.choices?.[0]?.message;
 
-        const content =
-            data?.choices?.[0]?.message?.content;
-
-
-        if (!content) {
-
+        if (!message) {
             console.error(
-                "No model content:",
+                "No message returned:",
                 JSON.stringify(data, null, 2)
             );
 
             return res.status(500).json({
-                error:
-                    "OpenAI returned no analysis content",
-                details:
-                    JSON.stringify(data)
+                error: "OpenAI returned no analysis message"
             });
-
         }
 
+        if (message.refusal) {
+            console.error(
+                "OpenAI refused analysis:",
+                message.refusal
+            );
 
-        console.log(
-            "Model analysis content:",
-            content
-        );
+            return res.status(500).json({
+                error: "The AI could not analyze this speech",
+                details: message.refusal
+            });
+        }
 
+        // ========================================================
+        // GET STRUCTURED CONTENT
+        // ========================================================
 
-        // =====================================================
-        // SAFELY PARSE MODEL JSON
-        // =====================================================
+        const content = message.content;
+
+        if (!content) {
+            console.error(
+                "OpenAI returned empty content:",
+                JSON.stringify(data, null, 2)
+            );
+
+            return res.status(500).json({
+                error: "OpenAI returned empty analysis"
+            });
+        }
+
+        // ========================================================
+        // PARSE STRUCTURED JSON
+        // ========================================================
 
         let analysis;
 
         try {
-
             analysis = JSON.parse(content);
-
-        } catch (firstError) {
-
+        } catch (error) {
             console.error(
-                "First JSON parse failed:",
-                firstError
+                "Structured analysis could not be parsed:",
+                content
             );
 
-            // -----------------------------------------------
-            // FALLBACK: remove accidental Markdown fences
-            // -----------------------------------------------
-
-            let cleaned = content.trim();
-
-            cleaned = cleaned
-                .replace(/^```json\s*/i, "")
-                .replace(/^```\s*/i, "")
-                .replace(/\s*```$/i, "")
-                .trim();
-
-
-            try {
-
-                analysis = JSON.parse(cleaned);
-
-            } catch (secondError) {
-
-                console.error(
-                    "Second JSON parse failed:",
-                    secondError
-                );
-
-                console.error(
-                    "Invalid model content:",
-                    content
-                );
-
-                return res.status(500).json({
-                    error:
-                        "The AI analysis JSON was invalid",
-                    details:
-                        content
-                });
-
-            }
+            return res.status(500).json({
+                error: "The AI analysis could not be parsed",
+                details: content
+            });
         }
 
-
-        // =====================================================
-        // VERIFY OBJECT
-        // =====================================================
+        // ========================================================
+        // BASIC VALIDATION
+        // ========================================================
 
         if (
             !analysis ||
-            typeof analysis !== "object" ||
-            Array.isArray(analysis)
+            typeof analysis !== "object"
         ) {
-
             return res.status(500).json({
-                error:
-                    "OpenAI returned an invalid analysis object"
+                error: "OpenAI returned an invalid analysis object"
             });
-
         }
 
+        // ========================================================
+        // SAFE HELPERS
+        // ========================================================
 
-        // =====================================================
-        // SAFE FIELDS
-        // =====================================================
+        const safeString = (value) => {
+            return typeof value === "string"
+                ? value.trim()
+                : "";
+        };
+
+        const safeArray = (value) => {
+            return Array.isArray(value)
+                ? value.filter(
+                    item =>
+                        typeof item === "string" &&
+                        item.trim()
+                )
+                : [];
+        };
+
+        // ========================================================
+        // CLEAN ANALYSIS
+        // ========================================================
 
         const overall =
-            typeof analysis.overall === "string"
-                ? analysis.overall
-                : "";
-
-
-        const fillerWords =
-            typeof analysis.fillerWords === "string"
-                ? analysis.fillerWords
-                : "";
-
+            safeString(analysis.overall);
 
         const clarity =
-            typeof analysis.clarity === "string"
-                ? analysis.clarity
-                : "";
+            safeString(analysis.clarity);
 
+        const structure =
+            safeString(analysis.structure);
 
-        const organization =
-            typeof analysis.organization === "string"
-                ? analysis.organization
-                : "";
-
-
-        const conciseness =
-            typeof analysis.conciseness === "string"
-                ? analysis.conciseness
-                : "";
-
+        const delivery =
+            safeString(analysis.delivery);
 
         const strengths =
-            typeof analysis.strengths === "string"
-                ? analysis.strengths
-                : "";
+            safeArray(analysis.strengths);
 
+        const improvements =
+            safeArray(analysis.improvements);
 
-        const improvement =
-            typeof analysis.improvement === "string"
-                ? analysis.improvement
-                : "";
+        const tips =
+            safeArray(analysis.tips);
 
+        const fillerWords =
+            analysis.fillerWords &&
+            typeof analysis.fillerWords === "object"
+                ? {
+                    summary:
+                        safeString(
+                            analysis.fillerWords.summary
+                        ),
 
-        const tip =
-            typeof analysis.tip === "string"
-                ? analysis.tip
-                : "";
+                    wordsFound:
+                        safeArray(
+                            analysis.fillerWords.wordsFound
+                        ),
 
+                    advice:
+                        safeString(
+                            analysis.fillerWords.advice
+                        )
+                }
+                : {
+                    summary: "",
+                    wordsFound: [],
+                    advice: ""
+                };
 
-        // =====================================================
-        // SECTIONS
-        // =====================================================
+        // ========================================================
+        // CLEAN SECTIONS
+        // ========================================================
 
         const sections =
             Array.isArray(analysis.sections)
-                ? analysis.sections
-                    .filter(
-                        section =>
-                            section &&
-                            typeof section === "object"
-                    )
-                    .map(section => ({
-                        title:
-                            typeof section.title === "string"
-                                ? section.title
-                                : "Speech Section",
+                ? analysis.sections.map(section => ({
+                    sectionName:
+                        safeString(
+                            section?.sectionName
+                        ),
 
-                        summary:
-                            typeof section.summary === "string"
-                                ? section.summary
-                                : "",
+                    summary:
+                        safeString(
+                            section?.summary
+                        ),
 
-                        whatWorked:
-                            typeof section.whatWorked === "string"
-                                ? section.whatWorked
-                                : "",
+                    whatWorked:
+                        safeString(
+                            section?.whatWorked
+                        ),
 
-                        whatToImprove:
-                            typeof section.whatToImprove === "string"
-                                ? section.whatToImprove
-                                : "",
+                    whatToImprove:
+                        safeString(
+                            section?.whatToImprove
+                        ),
 
-                        transition:
-                            typeof section.transition === "string"
-                                ? section.transition
-                                : ""
-                    }))
+                    specificExample:
+                        safeString(
+                            section?.specificExample
+                        )
+                }))
                 : [];
 
+        // ========================================================
+        // BUILD FRONTEND-FRIENDLY ANALYSIS
+        // ========================================================
 
-        // =====================================================
-        // MAKE SURE SOMETHING CAME BACK
-        // =====================================================
+        const formattedParts = [];
 
-        const hasAnalysis =
-            overall ||
-            fillerWords ||
-            clarity ||
-            organization ||
-            conciseness ||
-            strengths ||
-            improvement ||
-            tip ||
-            sections.length > 0;
-
-
-        if (!hasAnalysis) {
-
-            return res.status(500).json({
-                error:
-                    "OpenAI returned an empty analysis",
-                details:
-                    JSON.stringify(analysis)
-            });
-
+        if (overall) {
+            formattedParts.push(
+                `Overall:\n${overall}`
+            );
         }
 
+        if (sections.length > 0) {
+            const sectionText = sections
+                .map((section, index) => {
 
-        // =====================================================
-        // FORMAT TEXT FOR EXISTING FRONTEND
-        // =====================================================
+                    const parts = [];
 
-        const formattedSections =
-            sections
-                .map(section => {
+                    parts.push(
+                        `${index + 1}. ${section.sectionName}`
+                    );
 
-                    return [
+                    if (section.summary) {
+                        parts.push(
+                            `Summary:\n${section.summary}`
+                        );
+                    }
 
-                        section.title
-                            ? `${section.title}\n${section.summary}`
-                            : "",
+                    if (section.whatWorked) {
+                        parts.push(
+                            `What Worked:\n${section.whatWorked}`
+                        );
+                    }
 
-                        section.whatWorked
-                            ? `What worked:\n${section.whatWorked}`
-                            : "",
+                    if (section.whatToImprove) {
+                        parts.push(
+                            `What To Improve:\n${section.whatToImprove}`
+                        );
+                    }
 
-                        section.whatToImprove
-                            ? `What to improve:\n${section.whatToImprove}`
-                            : "",
+                    if (section.specificExample) {
+                        parts.push(
+                            `Specific Example:\n${section.specificExample}`
+                        );
+                    }
 
-                        section.transition
-                            ? `Transition:\n${section.transition}`
-                            : ""
-
-                    ]
-                        .filter(Boolean)
-                        .join("\n\n");
-
+                    return parts.join("\n");
                 })
-                .filter(Boolean)
-                .join("\n\n---\n\n");
+                .join("\n\n");
 
+            formattedParts.push(
+                `Speech Sections:\n${sectionText}`
+            );
+        }
 
-        const formattedAnalysis = [
+        if (
+            fillerWords.summary ||
+            fillerWords.wordsFound.length > 0 ||
+            fillerWords.advice
+        ) {
+            const fillerParts = [];
 
-            overall
-                ? `Overall:\n${overall}`
-                : "",
+            if (fillerWords.summary) {
+                fillerParts.push(
+                    fillerWords.summary
+                );
+            }
 
-            formattedSections
-                ? `Speech Sections:\n\n${formattedSections}`
-                : "",
+            if (fillerWords.wordsFound.length > 0) {
+                fillerParts.push(
+                    `Words found: ${fillerWords.wordsFound.join(", ")}`
+                );
+            }
 
-            fillerWords
-                ? `Filler Words:\n${fillerWords}`
-                : "",
+            if (fillerWords.advice) {
+                fillerParts.push(
+                    `Advice:\n${fillerWords.advice}`
+                );
+            }
 
-            clarity
-                ? `Clarity:\n${clarity}`
-                : "",
+            formattedParts.push(
+                `Filler Words:\n${fillerParts.join("\n")}`
+            );
+        }
 
-            organization
-                ? `Organization:\n${organization}`
-                : "",
+        if (clarity) {
+            formattedParts.push(
+                `Clarity:\n${clarity}`
+            );
+        }
 
-            conciseness
-                ? `Conciseness:\n${conciseness}`
-                : "",
+        if (structure) {
+            formattedParts.push(
+                `Structure:\n${structure}`
+            );
+        }
 
-            strengths
-                ? `Strengths:\n${strengths}`
-                : "",
+        if (delivery) {
+            formattedParts.push(
+                `Delivery:\n${delivery}`
+            );
+        }
 
-            improvement
-                ? `Most Important Improvement:\n${improvement}`
-                : "",
+        if (strengths.length > 0) {
+            formattedParts.push(
+                `Strengths:\n${strengths
+                    .map(
+                        (item, index) =>
+                            `${index + 1}. ${item}`
+                    )
+                    .join("\n")}`
+            );
+        }
 
-            tip
-                ? `Speaking Tip:\n${tip}`
-                : ""
+        if (improvements.length > 0) {
+            formattedParts.push(
+                `Improvements:\n${improvements
+                    .map(
+                        (item, index) =>
+                            `${index + 1}. ${item}`
+                    )
+                    .join("\n")}`
+            );
+        }
 
-        ]
-            .filter(Boolean)
-            .join("\n\n");
+        if (tips.length > 0) {
+            formattedParts.push(
+                `AI Tips:\n${tips
+                    .map(
+                        (item, index) =>
+                            `${index + 1}. ${item}`
+                    )
+                    .join("\n")}`
+            );
+        }
 
+        const formattedAnalysis =
+            formattedParts.join("\n\n");
 
-        // =====================================================
+        // ========================================================
+        // MAKE SURE ANALYSIS IS NOT EMPTY
+        // ========================================================
+
+        if (!formattedAnalysis.trim()) {
+            return res.status(500).json({
+                error: "OpenAI returned an empty analysis",
+                details: analysis
+            });
+        }
+
+        // ========================================================
         // RETURN RESULT
-        // =====================================================
+        // ========================================================
 
         return res.status(200).json({
 
+            // Existing frontend can continue using this.
             analysis: formattedAnalysis,
 
+            // New structured data for a nicer UI later.
             analysisData: {
-
                 overall,
-
                 sections,
-
                 fillerWords,
-
                 clarity,
-
-                organization,
-
-                conciseness,
-
+                structure,
+                delivery,
                 strengths,
-
-                improvement,
-
-                tip
-
+                improvements,
+                tips
             }
-
         });
 
     } catch (error) {
@@ -593,12 +736,9 @@ ${transcript}`
         );
 
         return res.status(500).json({
-
             error:
                 error?.message ||
                 "Unknown analysis error"
-
         });
-
     }
 }
