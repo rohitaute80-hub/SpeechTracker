@@ -1,3 +1,7 @@
+/* =========================================================
+   SPEECH TRACKER — COMPLETE STYLE
+   ========================================================= */
+
 :root {
     --bg: #ffffff;
     --surface: #f4f4f5;
@@ -33,7 +37,7 @@ html[data-theme="dark"] {
     --bg: #09090b;
     --surface: #18181b;
     --surface-strong: #111113;
-    --border: #27272a;
+    --border: #2a2a2e;
 
     --text: #fafafa;
     --secondary: #a1a1aa;
@@ -69,9 +73,9 @@ body {
 
     background:
         radial-gradient(
-            circle at 50% -180px,
+            circle at 50% -12%,
             rgba(37, 99, 235, 0.055),
-            transparent 520px
+            transparent 32%
         ),
         var(--bg);
 
@@ -103,53 +107,76 @@ body {
     top: 0;
     z-index: 100;
 
-    width: min(1060px, calc(100% - 40px));
+    width: min(1060px, calc(100% - 48px));
 
     margin: 0 auto;
 
-    min-height: 64px;
+    min-height: 72px;
 
-    padding: 10px 0;
+    padding: 14px 0;
 
     display: flex;
     align-items: center;
     justify-content: space-between;
 
-    background: rgba(255, 255, 255, 0.88);
+    gap: 28px;
 
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.96),
+            rgba(255, 255, 255, 0.86)
+        );
 
-    border-bottom: 1px solid transparent;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
 
 html[data-theme="dark"] .top-bar {
-    background: rgba(9, 9, 11, 0.88);
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(9, 9, 11, 0.96),
+            rgba(9, 9, 11, 0.84)
+        );
 }
+
+
+/* =========================================================
+   BRAND
+   ========================================================= */
 
 .brand-mini {
     display: flex;
     align-items: center;
-    gap: 9px;
+
+    min-width: 0;
+
+    gap: 11px;
 
     color: var(--text);
 
-    font-size: 0.9rem;
-    font-weight: 750;
+    font-size: 0.95rem;
+    font-weight: 800;
 
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
+
+    white-space: nowrap;
 }
 
 /*
-   Some older versions of the HTML may still contain
-   an image next to the brand. Hide it completely.
+   Hide the old image/question-mark style branding.
 */
 
 .brand-mini img,
 .brand-mini .brand-icon,
-.brand-mini .question-icon,
-.brand-mini .help-icon {
+.brand-mini .help-icon,
+.brand-mini .question-mark {
     display: none !important;
+}
+
+.brand-mini::before {
+    display: none;
 }
 
 
@@ -158,19 +185,22 @@ html[data-theme="dark"] .top-bar {
    ========================================================= */
 
 .theme-toggle {
-    min-height: 36px;
+    flex: 0 0 auto;
 
-    padding: 7px 13px;
+    min-height: 40px;
+
+    padding: 8px 15px;
 
     border: 1px solid var(--border);
     border-radius: 999px;
 
     background: var(--surface-strong);
+
     color: var(--text);
 
     font: inherit;
-    font-size: 0.78rem;
-    font-weight: 700;
+    font-size: 0.8rem;
+    font-weight: 750;
 
     cursor: pointer;
 
@@ -193,11 +223,11 @@ html[data-theme="dark"] .top-bar {
    ========================================================= */
 
 .app {
-    width: min(1060px, calc(100% - 40px));
+    width: min(1060px, calc(100% - 48px));
 
     margin: 0 auto;
 
-    padding: 0 0 70px;
+    padding: 18px 0 70px;
 }
 
 
@@ -206,55 +236,54 @@ html[data-theme="dark"] .top-bar {
    ========================================================= */
 
 .hero {
-    min-height: 0;
+    min-height: 340px;
 
-    display: block;
+    display: flex;
+    align-items: center;
 
-    padding:
-        62px 8px 42px;
+    gap: 52px;
+
+    padding: 52px 8px 46px;
 }
 
 .hero-icon {
-    display: none !important;
+    display: none;
 }
 
 .hero-copy {
-    max-width: 760px;
+    max-width: 720px;
 }
 
 .eyebrow,
 .section-kicker {
     color: var(--blue);
 
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 800;
 
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    letter-spacing: 0.13em;
 }
 
 .hero h1 {
     margin: 8px 0 14px;
 
-    color: var(--text);
+    font-size: clamp(2.7rem, 6vw, 4.8rem);
 
-    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    line-height: 1.02;
 
-    line-height: 0.98;
-
-    letter-spacing: -0.06em;
+    letter-spacing: -0.055em;
 }
 
 .hero p {
-    max-width: 620px;
+    max-width: 610px;
 
     margin: 0;
 
     color: var(--secondary);
 
-    font-size: clamp(1rem, 2vw, 1.12rem);
+    font-size: clamp(1rem, 2vw, 1.18rem);
 
-    line-height: 1.65;
+    line-height: 1.7;
 }
 
 
@@ -264,26 +293,25 @@ html[data-theme="dark"] .top-bar {
 
 .scroll-indicator {
     display: flex;
-
     flex-direction: column;
     align-items: center;
 
-    gap: 2px;
+    gap: 3px;
 
-    margin: 0 0 28px;
+    margin: -4px 0 34px;
 
     color: var(--muted);
 
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     font-weight: 650;
 
     animation: scrollBounce 1.8s infinite;
 
-    transition: opacity 180ms ease;
+    transition: opacity 200ms ease;
 }
 
 .scroll-arrow {
-    font-size: 1rem;
+    font-size: 1.1rem;
 }
 
 @keyframes scrollBounce {
@@ -293,7 +321,7 @@ html[data-theme="dark"] .top-bar {
     }
 
     50% {
-        transform: translateY(4px);
+        transform: translateY(5px);
     }
 }
 
@@ -305,7 +333,7 @@ html[data-theme="dark"] .top-bar {
 .card {
     margin-bottom: 18px;
 
-    padding: 26px;
+    padding: 27px;
 
     border: 1px solid var(--border);
     border-radius: var(--radius-xl);
@@ -321,7 +349,7 @@ html[data-theme="dark"] .top-bar {
     align-items: flex-start;
     justify-content: space-between;
 
-    gap: 18px;
+    gap: 20px;
 }
 
 .section-header {
@@ -334,8 +362,7 @@ h2 {
     color: var(--text);
 
     font-size: 1.25rem;
-
-    letter-spacing: -0.025em;
+    letter-spacing: -0.02em;
 }
 
 .description {
@@ -399,7 +426,7 @@ h2 {
 @keyframes pulse {
     0% {
         box-shadow:
-            0 0 0 0 rgba(16, 185, 129, 0.3);
+            0 0 0 0 rgba(16, 185, 129, 0.30);
     }
 
     70% {
@@ -516,6 +543,7 @@ h2 {
 
 .secondary-button {
     background: var(--surface-strong);
+
     color: var(--text);
 
     border-color: var(--border);
@@ -531,8 +559,6 @@ h2 {
     grid-template-columns: 1fr 1fr;
 
     gap: 14px;
-
-    margin-top: 4px;
 }
 
 .record-buttons .button {
@@ -549,8 +575,6 @@ h2 {
     align-items: center;
 
     gap: 8px;
-
-    margin-top: 14px;
 
     color: var(--secondary);
 
@@ -611,7 +635,6 @@ h2 {
 
 .save-actions {
     display: flex;
-
     gap: 9px;
 }
 
@@ -664,7 +687,6 @@ h2 {
     color: var(--text);
 
     font-size: 2rem;
-
     font-weight: 800;
 
     line-height: 1;
@@ -680,7 +702,7 @@ h2 {
 
 
 /* =========================================================
-   INPUT
+   INPUTS
    ========================================================= */
 
 .input-row {
@@ -706,6 +728,7 @@ input {
     outline: none;
 
     background: var(--surface-strong);
+
     color: var(--text);
 
     font: inherit;
@@ -738,7 +761,6 @@ input::placeholder {
 
 .word-list {
     display: flex;
-
     flex-wrap: wrap;
 
     gap: 8px;
@@ -748,7 +770,6 @@ input::placeholder {
 
 .word-tag {
     display: inline-flex;
-
     align-items: center;
 
     gap: 7px;
@@ -785,14 +806,8 @@ input::placeholder {
     background: rgba(239, 68, 68, 0.08);
 }
 
-
-/* =========================================================
-   DEFAULT WORDS
-   ========================================================= */
-
 .default-word-grid {
     display: flex;
-
     flex-wrap: wrap;
 
     gap: 8px;
@@ -840,49 +855,44 @@ input::placeholder {
         );
 }
 
-
-/*
-   AI is a label, NOT a button.
-   It should not look clickable.
-*/
-
 .ai-badge {
     display: inline-flex;
 
     align-items: center;
     justify-content: center;
 
-    min-width: 34px;
+    min-width: 38px;
 
-    padding: 5px 9px;
+    padding: 6px 10px;
 
-    border: 1px solid var(--border);
     border-radius: 999px;
 
-    background: var(--surface);
+    background: var(--blue-soft);
 
-    color: var(--secondary);
+    color: var(--blue);
 
-    font-size: 0.68rem;
-    font-weight: 800;
+    font-size: 0.7rem;
 
-    letter-spacing: 0.03em;
+    font-weight: 850;
 
-    pointer-events: none;
-
+    /*
+       Explicitly makes this look like a label,
+       NOT a button.
+    */
     cursor: default;
 
     user-select: none;
+
+    pointer-events: none;
 }
 
 
 /* =========================================================
-   ANALYSIS LOADING
+   AI LOADING
    ========================================================= */
 
 .analysis-loading {
     display: flex;
-
     align-items: center;
 
     gap: 9px;
@@ -959,7 +969,6 @@ input::placeholder {
     color: var(--text);
 
     font-size: 0.88rem;
-
     font-weight: 800;
 }
 
@@ -975,13 +984,11 @@ input::placeholder {
 
 .analysis-list {
     display: flex;
-
     flex-direction: column;
 
     gap: 9px;
 
     margin: 0;
-
     padding: 0;
 
     list-style: none;
@@ -1018,7 +1025,6 @@ input::placeholder {
     color: var(--text);
 
     font-weight: 750;
-
     font-size: 0.82rem;
 }
 
@@ -1047,7 +1053,6 @@ input::placeholder {
 
 .saved-speeches {
     display: flex;
-
     flex-direction: column;
 
     gap: 10px;
@@ -1068,7 +1073,6 @@ input::placeholder {
 
 .saved-speech {
     display: flex;
-
     align-items: center;
 
     gap: 12px;
@@ -1173,7 +1177,6 @@ input::placeholder {
 
 .steps {
     display: flex;
-
     flex-direction: column;
 
     gap: 13px;
@@ -1181,7 +1184,6 @@ input::placeholder {
 
 .step {
     display: flex;
-
     align-items: flex-start;
 
     gap: 13px;
@@ -1237,7 +1239,6 @@ input::placeholder {
 
 .modal-backdrop {
     position: fixed;
-
     inset: 0;
 
     z-index: 1000;
@@ -1254,10 +1255,6 @@ input::placeholder {
     backdrop-filter: blur(8px);
 }
 
-.modal-backdrop[hidden] {
-    display: none !important;
-}
-
 .modal {
     width: min(430px, 100%);
 
@@ -1272,9 +1269,12 @@ input::placeholder {
         0 25px 80px rgba(0, 0, 0, 0.22);
 }
 
+.modal[hidden] {
+    display: none !important;
+}
+
 .modal-title {
     font-size: 1.25rem;
-
     font-weight: 800;
 }
 
@@ -1328,28 +1328,54 @@ footer span {
     }
 
     .top-bar {
-        min-height: 58px;
+        min-height: 64px;
 
-        padding: 9px 0;
+        padding: 11px 0;
+
+        gap: 18px;
+    }
+
+    .brand-mini {
+        font-size: 0.88rem;
+    }
+
+    .theme-toggle {
+        min-height: 37px;
+
+        padding: 7px 13px;
+    }
+
+    .app {
+        padding-top: 8px;
     }
 
     .hero {
-        padding:
-            44px 2px 32px;
+        min-height: auto;
+
+        padding: 36px 4px 32px;
+
+        gap: 20px;
     }
 
     .hero h1 {
-        font-size: 2.7rem;
+        font-size: 2.65rem;
     }
 
     .hero p {
-        font-size: 0.98rem;
+        font-size: 1rem;
+
+        line-height: 1.65;
     }
 
     .card {
         padding: 20px;
 
         border-radius: 20px;
+    }
+
+    .card-top,
+    .section-header {
+        gap: 12px;
     }
 
     .record-buttons {
@@ -1383,26 +1409,31 @@ footer span {
 
         border-radius: 12px;
     }
-
-    .card-top,
-    .section-header {
-        gap: 12px;
-    }
-
-    .status-pill {
-        font-size: 0.72rem;
-    }
 }
 
 
 @media (max-width: 420px) {
 
-    .stats-grid {
-        grid-template-columns: 1fr;
+    .top-bar,
+    .app {
+        width: calc(100% - 22px);
     }
 
-    .hero {
-        padding-top: 36px;
+    .top-bar {
+        gap: 12px;
+    }
+
+    .brand-mini {
+        font-size: 0.84rem;
+    }
+
+    .theme-toggle {
+        padding-left: 11px;
+        padding-right: 11px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
     }
 
     .hero h1 {
@@ -1412,10 +1443,6 @@ footer span {
     .live-transcript {
         min-height: 170px;
 
-        padding: 17px;
-    }
-
-    .card {
         padding: 17px;
     }
 }
