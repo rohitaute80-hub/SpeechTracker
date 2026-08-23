@@ -31,79 +31,52 @@
 
     <title>Speech Tracker</title>
 
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
+    <link rel="stylesheet" href="style.css">
 </head>
 
 
 <body>
 
-    <!-- =====================================================
-         HEADER
-    ====================================================== -->
+    <!-- =========================
+         TOP BAR
+    ========================== -->
 
-    <header class="site-header">
+    <div class="top-bar">
 
-        <div class="header-inner">
+        <div class="top-brand">
+            <div class="brand-mark">S</div>
+            <span>Speech Tracker</span>
+        </div>
 
-            <div class="brand">
+        <div class="top-actions">
 
-                <div class="brand-icon">
-                    <span></span>
-                </div>
+            <button
+                id="themeToggle"
+                class="icon-button"
+                type="button"
+                aria-label="Toggle theme"
+                title="Toggle light/dark mode"
+            >
+                <span id="themeIcon">☀️</span>
+            </button>
 
-                <div class="brand-text">
-
-                    <h1>Speech Tracker</h1>
-
-                    <span>
-                        AI-powered speaking practice
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <div class="header-actions">
-
-                <!-- LOGIN -->
-
-                <button
-                    id="loginButton"
-                    class="header-button account-button"
-                    type="button"
-                >
-                    <span class="button-icon">👤</span>
-                    <span id="accountButtonText">Log in</span>
-                </button>
-
-
-                <!-- THEME -->
-
-                <button
-                    id="themeToggle"
-                    class="theme-toggle"
-                    type="button"
-                    aria-label="Switch theme"
-                    title="Switch between light and dark mode"
-                >
-                    <span id="themeIcon">🌙</span>
-                </button>
-
-            </div>
+            <button
+                id="accountButton"
+                class="account-button"
+                type="button"
+            >
+                <span class="account-avatar" id="accountAvatar">?</span>
+                <span id="accountButtonText">Log in</span>
+            </button>
 
         </div>
 
-    </header>
+    </div>
 
 
-
-    <!-- =====================================================
-         LOGIN / SIGNUP MODAL
-    ====================================================== -->
+    <!-- =========================
+         AUTH MODAL
+    ========================== -->
 
     <div
         id="authModal"
@@ -111,127 +84,71 @@
         hidden
     >
 
-        <div
-            class="auth-modal"
-            role="dialog"
-            aria-modal="true"
-        >
+        <div class="auth-modal">
 
             <button
-                id="closeAuthModal"
+                id="closeAuth"
                 class="modal-close"
                 type="button"
-                aria-label="Close"
             >
                 ×
             </button>
 
-
-            <div class="auth-header">
-
-                <div class="auth-icon">
-                    👤
-                </div>
-
-                <h2 id="authTitle">
-                    Welcome back
-                </h2>
-
-                <p id="authSubtitle">
-                    Log in to save and manage your speeches.
-                </p>
-
+            <div class="auth-logo">
+                S
             </div>
 
+            <h2 id="authTitle">
+                Welcome back
+            </h2>
 
-            <div class="auth-tabs">
-
-                <button
-                    id="loginTab"
-                    class="auth-tab active"
-                    type="button"
-                >
-                    Log In
-                </button>
-
-                <button
-                    id="signupTab"
-                    class="auth-tab"
-                    type="button"
-                >
-                    Sign Up
-                </button>
-
-            </div>
+            <p
+                id="authSubtitle"
+                class="auth-subtitle"
+            >
+                Log in to save and review your speeches.
+            </p>
 
 
-            <form id="authForm">
+            <!-- LOGIN -->
 
-                <div
-                    id="nameField"
-                    class="form-field"
-                    hidden
+            <form id="loginForm">
+
+                <label for="loginEmail">
+                    Email
+                </label>
+
+                <input
+                    id="loginEmail"
+                    type="email"
+                    placeholder="you@example.com"
+                    required
+                    autocomplete="email"
                 >
 
-                    <label for="authName">
-                        Name
-                    </label>
 
-                    <input
-                        id="authName"
-                        type="text"
-                        placeholder="Your name"
-                        autocomplete="name"
-                    >
+                <label for="loginPassword">
+                    Password
+                </label>
 
-                </div>
-
-
-                <div class="form-field">
-
-                    <label for="authEmail">
-                        Email
-                    </label>
-
-                    <input
-                        id="authEmail"
-                        type="email"
-                        placeholder="you@example.com"
-                        autocomplete="email"
-                        required
-                    >
-
-                </div>
-
-
-                <div class="form-field">
-
-                    <label for="authPassword">
-                        Password
-                    </label>
-
-                    <input
-                        id="authPassword"
-                        type="password"
-                        placeholder="Enter your password"
-                        autocomplete="current-password"
-                        required
-                    >
-
-                </div>
+                <input
+                    id="loginPassword"
+                    type="password"
+                    placeholder="Your password"
+                    required
+                    autocomplete="current-password"
+                >
 
 
                 <p
-                    id="authError"
+                    id="loginError"
                     class="auth-error"
-                    hidden
                 ></p>
 
 
                 <button
-                    id="authSubmit"
-                    class="button primary auth-submit"
                     type="submit"
+                    class="button primary full"
                 >
                     Log In
                 </button>
@@ -239,51 +156,155 @@
             </form>
 
 
-            <p class="auth-disclaimer">
-                Demo account system — your information is stored
-                locally in this browser.
-            </p>
+            <!-- SIGN UP -->
+
+            <form
+                id="signupForm"
+                hidden
+            >
+
+                <label for="signupName">
+                    Name
+                </label>
+
+                <input
+                    id="signupName"
+                    type="text"
+                    placeholder="Your name"
+                    required
+                    autocomplete="name"
+                >
+
+
+                <label for="signupEmail">
+                    Email
+                </label>
+
+                <input
+                    id="signupEmail"
+                    type="email"
+                    placeholder="you@example.com"
+                    required
+                    autocomplete="email"
+                >
+
+
+                <label for="signupPassword">
+                    Password
+                </label>
+
+                <input
+                    id="signupPassword"
+                    type="password"
+                    placeholder="Create a password"
+                    minlength="6"
+                    required
+                    autocomplete="new-password"
+                >
+
+
+                <p
+                    id="signupError"
+                    class="auth-error"
+                ></p>
+
+
+                <button
+                    type="submit"
+                    class="button primary full"
+                >
+                    Create Account
+                </button>
+
+            </form>
+
+
+            <button
+                id="authSwitch"
+                class="auth-switch"
+                type="button"
+            >
+                Don't have an account? Sign up
+            </button>
 
         </div>
 
     </div>
 
 
+    <!-- =========================
+         ACCOUNT MENU
+    ========================== -->
 
-    <!-- =====================================================
+    <div
+        id="accountMenu"
+        class="account-menu"
+        hidden
+    >
+
+        <div class="account-menu-header">
+
+            <div
+                id="menuAvatar"
+                class="large-avatar"
+            >
+                ?
+            </div>
+
+            <div>
+                <strong id="menuName">
+                    User
+                </strong>
+
+                <span id="menuEmail">
+                    user@example.com
+                </span>
+            </div>
+
+        </div>
+
+
+        <button
+            id="logoutButton"
+            class="logout-button"
+            type="button"
+        >
+            Log out
+        </button>
+
+    </div>
+
+
+    <!-- =========================
          MAIN APP
-    ====================================================== -->
+    ========================== -->
 
     <main class="app">
 
 
-        <!-- =================================================
-             HERO
-        ================================================== -->
+        <!-- HERO -->
 
-        <section class="hero">
+        <header class="hero">
 
             <div class="hero-badge">
-                <span class="hero-dot"></span>
-                Speech practice
+                AI SPEECH COACH
             </div>
 
-            <h2>
-                Speak with more confidence.
-            </h2>
+            <h1>
+                Speak with confidence.
+            </h1>
 
             <p>
-                Practice your speech, catch filler words,
-                and get specific AI feedback.
+                Practice your speaking, catch filler words,
+                and get detailed AI feedback.
             </p>
 
-        </section>
+        </header>
 
 
-
-        <!-- =================================================
+        <!-- =========================
              RECORDING
-        ================================================== -->
+        ========================== -->
 
         <section class="card recording-card">
 
@@ -291,28 +312,30 @@
 
                 <div>
 
-                    <div class="eyebrow">
-                        LIVE SESSION
+                    <div class="status">
+
+                        <span
+                            id="statusDot"
+                            class="dot ready"
+                        ></span>
+
+                        <span id="status">
+                            Ready
+                        </span>
+
                     </div>
 
                     <h2>
-                        Practice your speech
+                        Practice Session
                     </h2>
 
                 </div>
 
-
-                <div class="status">
-
-                    <span
-                        id="statusDot"
-                        class="dot ready"
-                    ></span>
-
-                    <span id="status">
-                        Ready
-                    </span>
-
+                <div
+                    id="recordingTimer"
+                    class="timer"
+                >
+                    00:00
                 </div>
 
             </div>
@@ -323,7 +346,7 @@
                 class="heard"
             >
                 <span class="heard-placeholder">
-                    Tap <strong>Listen</strong> and start speaking.
+                    Tap Listen and start speaking.
                 </span>
             </div>
 
@@ -332,118 +355,128 @@
 
                 <button
                     id="listenButton"
-                    class="button primary record-main-button"
+                    class="button primary record-button"
                     type="button"
                 >
-                    🎤
-                    <span>Listen</span>
+                    🎤 Start Listening
                 </button>
 
 
                 <button
                     id="stopButton"
-                    class="button secondary"
+                    class="button secondary record-button"
                     type="button"
                     disabled
                 >
-                    ⏹
-                    <span>Stop</span>
+                    ■ Stop
                 </button>
 
             </div>
 
 
-            <div class="recording-help">
-
-                <span>●</span>
-
-                Live transcription detects tracked words
-                while you speak.
-
-            </div>
-
-        </section>
-
-
-
-        <!-- =================================================
-             SPEECH STATS
-        ================================================== -->
-
-        <section class="card">
-
-            <div class="section-title">
-
-                <div>
-
-                    <div class="eyebrow">
-                        SESSION
-                    </div>
-
-                    <h2>
-                        Speech Stats
-                    </h2>
-
-                </div>
-
-            </div>
-
-
-            <div class="stats-grid">
-
-
-                <div class="stat">
-
-                    <div
-                        id="fillerCount"
-                        class="stat-number"
-                    >
-                        0
-                    </div>
-
-                    <div class="stat-label">
-                        Tracked Words
-                    </div>
-
-                </div>
-
-
-                <div class="stat">
-
-                    <div
-                        id="wordCount"
-                        class="stat-number"
-                    >
-                        0
-                    </div>
-
-                    <div class="stat-label">
-                        Total Words
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <p class="info">
-                Tracked words appear highlighted in your transcript.
+            <p class="info center">
+                Your speech will appear here while you talk.
             </p>
 
         </section>
 
 
+        <!-- =========================
+             STATS
+        ========================== -->
 
-        <!-- =================================================
-             CUSTOM WORDS
-        ================================================== -->
+        <section class="stats-grid">
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    #
+                </div>
+
+                <div
+                    id="fillerCount"
+                    class="stat-number"
+                >
+                    0
+                </div>
+
+                <div class="stat-label">
+                    Tracked Words
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    Aa
+                </div>
+
+                <div
+                    id="wordCount"
+                    class="stat-number"
+                >
+                    0
+                </div>
+
+                <div class="stat-label">
+                    Total Words
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             TRANSCRIPT
+        ========================== -->
 
         <section class="card">
 
-            <div class="section-title">
+            <div class="section-heading">
 
                 <div>
+                    <div class="eyebrow">
+                        TRANSCRIPT
+                    </div>
 
+                    <h2>
+                        Your Speech
+                    </h2>
+                </div>
+
+                <span class="live-badge">
+                    LIVE
+                </span>
+
+            </div>
+
+
+            <div
+                id="transcriptSection"
+                class="transcript"
+            >
+
+                <span class="transcript-empty">
+                    Your transcript will appear here.
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             WORDS TO TRACK
+        ========================== -->
+
+        <section class="card">
+
+            <div class="section-heading">
+
+                <div>
                     <div class="eyebrow">
                         CUSTOMIZE
                     </div>
@@ -451,15 +484,14 @@
                     <h2>
                         Words to Track
                     </h2>
-
                 </div>
 
             </div>
 
 
             <p class="info">
-                Add words or phrases that you want Speech Tracker
-                to detect.
+                Add words or phrases that you want Speech
+                Tracker to detect.
             </p>
 
 
@@ -468,13 +500,13 @@
                 <input
                     id="customWordInput"
                     type="text"
-                    placeholder="e.g. basically"
+                    placeholder="e.g. actually"
                     autocomplete="off"
                 >
 
                 <button
                     id="addWordButton"
-                    class="button primary send"
+                    class="button primary add-button"
                     type="button"
                 >
                     Add
@@ -497,61 +529,41 @@
                 Reset Default Words
             </button>
 
-        </section>
 
+            <div class="default-section">
 
+                <div class="eyebrow">
+                    DEFAULTS
+                </div>
 
-        <!-- =================================================
-             DEFAULT WORDS
-        ================================================== -->
+                <div class="default-word-grid">
 
-        <section class="card">
-
-            <div class="section-title">
-
-                <div>
-
-                    <div class="eyebrow">
-                        DEFAULTS
-                    </div>
-
-                    <h2>
-                        Default Tracked Words
-                    </h2>
+                    <span class="default-word">um</span>
+                    <span class="default-word">uh</span>
+                    <span class="default-word">umm</span>
+                    <span class="default-word">uhh</span>
+                    <span class="default-word">like</span>
+                    <span class="default-word">you know</span>
+                    <span class="default-word">basically</span>
+                    <span class="default-word">literally</span>
+                    <span class="default-word">actually</span>
 
                 </div>
 
             </div>
 
-
-            <div class="default-word-grid">
-
-                <span class="default-word">um</span>
-                <span class="default-word">uh</span>
-                <span class="default-word">umm</span>
-                <span class="default-word">uhh</span>
-                <span class="default-word">like</span>
-                <span class="default-word">you know</span>
-                <span class="default-word">basically</span>
-                <span class="default-word">literally</span>
-                <span class="default-word">actually</span>
-
-            </div>
-
         </section>
 
 
-
-        <!-- =================================================
+        <!-- =========================
              NOTIFICATIONS
-        ================================================== -->
+        ========================== -->
 
         <section class="card">
 
-            <div class="section-title">
+            <div class="section-heading">
 
                 <div>
-
                     <div class="eyebrow">
                         ALERTS
                     </div>
@@ -559,7 +571,6 @@
                     <h2>
                         Notifications
                     </h2>
-
                 </div>
 
                 <span class="section-icon">
@@ -570,14 +581,14 @@
 
 
             <p class="info">
-                Get an alert whenever one of your tracked words
-                is detected.
+                Get an alert whenever one of your tracked
+                words is detected.
             </p>
 
 
             <button
                 id="enableNotifications"
-                class="button secondary full-button"
+                class="button secondary full"
                 type="button"
             >
                 🔔 Enable Notifications
@@ -586,7 +597,7 @@
 
             <p
                 id="notificationStatus"
-                class="info notification-status"
+                class="notification-status"
             >
                 Notifications are not enabled.
             </p>
@@ -594,32 +605,30 @@
         </section>
 
 
-
-        <!-- =================================================
+        <!-- =========================
              AI ANALYSIS
-        ================================================== -->
+        ========================== -->
 
-        <section class="card ai-card">
+        <section class="card analysis-card">
 
-            <div class="section-title">
+            <div class="section-heading">
 
                 <div>
 
                     <div class="eyebrow">
-                        AFTER YOUR SESSION
+                        AI COACH
                     </div>
 
                     <h2>
-                        AI Speech Analysis
+                        Speech Analysis
                     </h2>
 
                     <p class="info">
-                        Get detailed feedback about different sections
-                        of your speech.
+                        Get specific feedback about different
+                        sections of your speech.
                     </p>
 
                 </div>
-
 
                 <span class="ai-badge">
                     AI
@@ -630,11 +639,11 @@
 
             <button
                 id="analyzeButton"
-                class="button primary full-button"
+                class="button primary full"
                 type="button"
                 disabled
             >
-                🤖 Analyze My Speech
+                ✨ Analyze My Speech
             </button>
 
 
@@ -643,7 +652,7 @@
                 class="analysis-loading"
                 hidden
             >
-                <span class="loading-spinner"></span>
+                <span class="loading-dot"></span>
                 Analyzing your speech...
             </div>
 
@@ -656,57 +665,98 @@
         </section>
 
 
+        <!-- =========================
+             SAVE SPEECH
+        ========================== -->
 
-        <!-- =================================================
-             SAVED SPEECHES
-        ================================================== -->
+        <section class="card save-card">
 
-        <section class="card saved-card">
-
-            <div class="section-title">
+            <div class="section-heading">
 
                 <div>
 
                     <div class="eyebrow">
-                        YOUR PRACTICE HISTORY
+                        HISTORY
                     </div>
 
                     <h2>
-                        Saved Speeches
+                        Save This Speech
                     </h2>
-
-                    <p class="info">
-                        Save your practice sessions and review them later.
-                    </p>
 
                 </div>
 
-                <span class="section-icon">
-                    💾
+            </div>
+
+
+            <p class="info">
+                Save your current transcript and analysis
+                so you can review your progress later.
+            </p>
+
+
+            <input
+                id="speechTitle"
+                class="speech-title-input"
+                type="text"
+                placeholder="Give this speech a name..."
+                autocomplete="off"
+            >
+
+
+            <button
+                id="saveSpeechButton"
+                class="button primary full"
+                type="button"
+            >
+                💾 Save Speech
+            </button>
+
+
+            <p
+                id="saveStatus"
+                class="save-status"
+            ></p>
+
+        </section>
+
+
+        <!-- =========================
+             PAST SPEECHES
+        ========================== -->
+
+        <section class="card">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <div class="eyebrow">
+                        HISTORY
+                    </div>
+
+                    <h2>
+                        Past Speeches
+                    </h2>
+
+                </div>
+
+                <span
+                    id="speechCount"
+                    class="count-badge"
+                >
+                    0
                 </span>
 
             </div>
 
 
             <div
-                id="savedSpeeches"
-                class="saved-speeches"
+                id="pastSpeeches"
+                class="past-speeches"
             >
 
-                <div class="empty-speeches">
-
-                    <div class="empty-icon">
-                        📝
-                    </div>
-
-                    <strong>
-                        No saved speeches yet
-                    </strong>
-
-                    <p>
-                        Your saved practice sessions will appear here.
-                    </p>
-
+                <div class="empty-history">
+                    Log in and save a speech to see it here.
                 </div>
 
             </div>
@@ -714,99 +764,22 @@
         </section>
 
 
-
-        <!-- =================================================
-             VIBRATION
-        ================================================== -->
-
-        <section class="card">
-
-            <div class="section-title">
-
-                <div>
-
-                    <div class="eyebrow">
-                        HARDWARE
-                    </div>
-
-                    <h2>
-                        Vibration
-                    </h2>
-
-                </div>
-
-                <span class="section-icon">
-                    📳
-                </span>
-
-            </div>
-
-
-            <p class="info">
-                When a tracked word is detected, your phone can
-                vibrate.
-            </p>
-
-
-            <div class="vibration-info">
-
-                <div class="info-box">
-
-                    <strong>
-                        Android
-                    </strong>
-
-                    <span>
-                        Chrome and compatible browsers
-                    </span>
-
-                </div>
-
-
-                <div class="info-box">
-
-                    <strong>
-                        iPhone
-                    </strong>
-
-                    <span>
-                        Browser vibration may not be supported.
-                        Notifications can still alert you.
-                    </span>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-
-        <!-- =================================================
+        <!-- =========================
              HOW IT WORKS
-        ================================================== -->
+        ========================== -->
 
         <section class="card">
 
-            <div class="section-title">
-
-                <div>
-
-                    <div class="eyebrow">
-                        GET STARTED
-                    </div>
-
-                    <h2>
-                        How It Works
-                    </h2>
-
-                </div>
-
+            <div class="eyebrow">
+                GET STARTED
             </div>
+
+            <h2>
+                How It Works
+            </h2>
 
 
             <div class="steps">
-
 
                 <div class="step">
 
@@ -815,15 +788,11 @@
                     </span>
 
                     <div>
-
-                        <strong>
-                            Speak
-                        </strong>
+                        <strong>Speak</strong>
 
                         <p>
-                            Tap Listen and talk normally.
+                            Tap Start Listening and speak normally.
                         </p>
-
                     </div>
 
                 </div>
@@ -836,16 +805,12 @@
                     </span>
 
                     <div>
-
-                        <strong>
-                            Live Transcription
-                        </strong>
+                        <strong>Track</strong>
 
                         <p>
-                            Your speech appears on screen while
-                            you talk.
+                            Your speech appears live and tracked
+                            words are highlighted.
                         </p>
-
                     </div>
 
                 </div>
@@ -858,16 +823,12 @@
                     </span>
 
                     <div>
-
-                        <strong>
-                            Detect
-                        </strong>
+                        <strong>Analyze</strong>
 
                         <p>
-                            Tracked words are highlighted and can
-                            trigger notifications.
+                            Stop your session and get detailed
+                            AI feedback.
                         </p>
-
                     </div>
 
                 </div>
@@ -880,38 +841,12 @@
                     </span>
 
                     <div>
-
-                        <strong>
-                            Analyze
-                        </strong>
+                        <strong>Improve</strong>
 
                         <p>
-                            AI reviews your speech and identifies
-                            areas to improve.
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                <div class="step">
-
-                    <span class="step-number">
-                        5
-                    </span>
-
-                    <div>
-
-                        <strong>
-                            Improve
-                        </strong>
-
-                        <p>
-                            Save your sessions and track your
+                            Save your speech and compare your
                             progress over time.
                         </p>
-
                     </div>
 
                 </div>
@@ -921,526 +856,16 @@
         </section>
 
 
+        <footer>
+            Speech Tracker
+            <span>•</span>
+            AI Speech Practice
+        </footer>
+
     </main>
 
 
-
-    <!-- =====================================================
-         FOOTER
-    ====================================================== -->
-
-    <footer>
-
-        <strong>
-            Speech Tracker
-        </strong>
-
-        <span>•</span>
-
-        AI Speech Practice
-
-        <p>
-            No hardware required
-        </p>
-
-    </footer>
-
-
-
-    <!-- =====================================================
-         SCRIPT
-    ====================================================== -->
-
     <script src="script.js"></script>
-
-
-    <!-- =====================================================
-         AUTH + THEME UI
-         
-         This is intentionally separate from your main
-         speech-tracking code so your existing script.js
-         can continue working.
-    ====================================================== -->
-
-    <script>
-
-        /* ================================================
-           THEME
-        ================================================ */
-
-        const themeToggle =
-            document.getElementById("themeToggle");
-
-        const themeIcon =
-            document.getElementById("themeIcon");
-
-
-        function applyTheme(theme) {
-
-            document.documentElement.dataset.theme =
-                theme;
-
-            if (theme === "dark") {
-
-                themeIcon.textContent = "☀️";
-
-                themeToggle.setAttribute(
-                    "aria-label",
-                    "Switch to light mode"
-                );
-
-            } else {
-
-                themeIcon.textContent = "🌙";
-
-                themeToggle.setAttribute(
-                    "aria-label",
-                    "Switch to dark mode"
-                );
-            }
-
-            localStorage.setItem(
-                "speechTrackerTheme",
-                theme
-            );
-        }
-
-
-        const savedTheme =
-            localStorage.getItem(
-                "speechTrackerTheme"
-            );
-
-
-        applyTheme(
-            savedTheme ||
-            "light"
-        );
-
-
-        themeToggle.addEventListener(
-            "click",
-            () => {
-
-                const current =
-                    document.documentElement.dataset.theme ||
-                    "light";
-
-                applyTheme(
-                    current === "dark"
-                        ? "light"
-                        : "dark"
-                );
-
-            }
-        );
-
-
-
-        /* ================================================
-           AUTH MODAL
-        ================================================ */
-
-        const authModal =
-            document.getElementById("authModal");
-
-        const loginButton =
-            document.getElementById("loginButton");
-
-        const closeAuthModal =
-            document.getElementById("closeAuthModal");
-
-        const loginTab =
-            document.getElementById("loginTab");
-
-        const signupTab =
-            document.getElementById("signupTab");
-
-        const authTitle =
-            document.getElementById("authTitle");
-
-        const authSubtitle =
-            document.getElementById("authSubtitle");
-
-        const authSubmit =
-            document.getElementById("authSubmit");
-
-        const nameField =
-            document.getElementById("nameField");
-
-        const authName =
-            document.getElementById("authName");
-
-        const authEmail =
-            document.getElementById("authEmail");
-
-        const authPassword =
-            document.getElementById("authPassword");
-
-        const authForm =
-            document.getElementById("authForm");
-
-        const authError =
-            document.getElementById("authError");
-
-        const accountButtonText =
-            document.getElementById("accountButtonText");
-
-
-        let authMode = "login";
-
-
-        function openAuthModal(mode = "login") {
-
-            authMode = mode;
-
-            updateAuthUI();
-
-            authModal.hidden = false;
-
-            document.body.classList.add(
-                "modal-open"
-            );
-
-            setTimeout(() => {
-
-                if (mode === "signup") {
-                    authName.focus();
-                } else {
-                    authEmail.focus();
-                }
-
-            }, 50);
-        }
-
-
-        function closeModal() {
-
-            authModal.hidden = true;
-
-            document.body.classList.remove(
-                "modal-open"
-            );
-
-            authError.hidden = true;
-
-            authForm.reset();
-        }
-
-
-        function updateAuthUI() {
-
-            const signup =
-                authMode === "signup";
-
-
-            loginTab.classList.toggle(
-                "active",
-                !signup
-            );
-
-            signupTab.classList.toggle(
-                "active",
-                signup
-            );
-
-
-            nameField.hidden =
-                !signup;
-
-
-            authName.required =
-                signup;
-
-
-            if (signup) {
-
-                authTitle.textContent =
-                    "Create your account";
-
-                authSubtitle.textContent =
-                    "Save your speeches and track your practice.";
-
-                authSubmit.textContent =
-                    "Create Account";
-
-            } else {
-
-                authTitle.textContent =
-                    "Welcome back";
-
-                authSubtitle.textContent =
-                    "Log in to save and manage your speeches.";
-
-                authSubmit.textContent =
-                    "Log In";
-            }
-
-        }
-
-
-        loginButton.addEventListener(
-            "click",
-            () => {
-
-                const currentUser =
-                    JSON.parse(
-                        localStorage.getItem(
-                            "speechTrackerUser"
-                        ) || "null"
-                    );
-
-                if (currentUser) {
-
-                    if (
-                        confirm(
-                            `Log out of ${currentUser.name || currentUser.email}?`
-                        )
-                    ) {
-
-                        localStorage.removeItem(
-                            "speechTrackerUser"
-                        );
-
-                        updateAccountButton();
-
-                    }
-
-                } else {
-
-                    openAuthModal("login");
-
-                }
-
-            }
-        );
-
-
-        closeAuthModal.addEventListener(
-            "click",
-            closeModal
-        );
-
-
-        authModal.addEventListener(
-            "click",
-            (event) => {
-
-                if (
-                    event.target === authModal
-                ) {
-                    closeModal();
-                }
-
-            }
-        );
-
-
-        loginTab.addEventListener(
-            "click",
-            () => {
-
-                authMode = "login";
-
-                updateAuthUI();
-
-            }
-        );
-
-
-        signupTab.addEventListener(
-            "click",
-            () => {
-
-                authMode = "signup";
-
-                updateAuthUI();
-
-            }
-        );
-
-
-        authForm.addEventListener(
-            "submit",
-            (event) => {
-
-                event.preventDefault();
-
-                authError.hidden = true;
-
-
-                const email =
-                    authEmail.value
-                        .trim()
-                        .toLowerCase();
-
-                const password =
-                    authPassword.value;
-
-
-                if (!email || !password) {
-
-                    showAuthError(
-                        "Please enter your email and password."
-                    );
-
-                    return;
-                }
-
-
-                if (authMode === "signup") {
-
-                    const name =
-                        authName.value.trim();
-
-
-                    if (!name) {
-
-                        showAuthError(
-                            "Please enter your name."
-                        );
-
-                        return;
-                    }
-
-
-                    const user = {
-
-                        name,
-                        email,
-
-                        /*
-                         * Demo only.
-                         * Do NOT use this approach for
-                         * a production authentication system.
-                         */
-
-                        password
-
-                    };
-
-
-                    localStorage.setItem(
-                        "speechTrackerUser",
-                        JSON.stringify(user)
-                    );
-
-
-                    closeModal();
-
-                    updateAccountButton();
-
-                    return;
-                }
-
-
-                const savedUser =
-                    JSON.parse(
-                        localStorage.getItem(
-                            "speechTrackerUser"
-                        ) || "null"
-                    );
-
-
-                if (!savedUser) {
-
-                    showAuthError(
-                        "No account found. Please sign up first."
-                    );
-
-                    return;
-                }
-
-
-                if (
-                    savedUser.email !== email ||
-                    savedUser.password !== password
-                ) {
-
-                    showAuthError(
-                        "Incorrect email or password."
-                    );
-
-                    return;
-                }
-
-
-                closeModal();
-
-                updateAccountButton();
-
-            }
-        );
-
-
-        function showAuthError(message) {
-
-            authError.textContent =
-                message;
-
-            authError.hidden = false;
-
-        }
-
-
-        function updateAccountButton() {
-
-            const user =
-                JSON.parse(
-                    localStorage.getItem(
-                        "speechTrackerUser"
-                    ) || "null"
-                );
-
-
-            if (user) {
-
-                accountButtonText.textContent =
-                    user.name || "Account";
-
-                loginButton.classList.add(
-                    "logged-in"
-                );
-
-            } else {
-
-                accountButtonText.textContent =
-                    "Log in";
-
-                loginButton.classList.remove(
-                    "logged-in"
-                );
-
-            }
-
-        }
-
-
-        updateAccountButton();
-
-
-
-        /* ================================================
-           ESCAPE TO CLOSE MODAL
-        ================================================ */
-
-        document.addEventListener(
-            "keydown",
-            (event) => {
-
-                if (
-                    event.key === "Escape" &&
-                    !authModal.hidden
-                ) {
-
-                    closeModal();
-
-                }
-
-            }
-        );
-
-    </script>
 
 </body>
 

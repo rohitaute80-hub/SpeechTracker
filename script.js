@@ -2259,3 +2259,954 @@ console.log(
     "Live interim detection:",
     true
 );
+
+/* ============================================================
+   THEME SYSTEM
+============================================================ */
+
+const themeToggle = document.getElementById("themeToggle");
+const themeIcon = document.getElementById("themeIcon");
+
+function applyTheme(theme) {
+
+    document.documentElement.setAttribute(
+        "data-theme",
+        theme
+    );
+
+    localStorage.setItem(
+        "speechTrackerTheme",
+        theme
+    );
+
+    if (themeIcon) {
+        themeIcon.textContent =
+            theme === "dark"
+                ? "🌙"
+                : "☀️";
+    }
+}
+
+
+function initializeTheme() {
+
+    const savedTheme =
+        localStorage.getItem("speechTrackerTheme");
+
+    if (savedTheme) {
+        applyTheme(savedTheme);
+        return;
+    }
+
+    const prefersDark =
+        window.matchMedia &&
+        window.matchMedia(
+            "(prefers-color-scheme: dark)"
+        ).matches;
+
+    applyTheme(
+        prefersDark
+            ? "dark"
+            : "light"
+    );
+}
+
+
+initializeTheme();
+
+
+if (themeToggle) {
+
+    themeToggle.addEventListener(
+        "click",
+        () => {
+
+            const current =
+                document.documentElement
+                    .getAttribute("data-theme");
+
+            applyTheme(
+                current === "dark"
+                    ? "light"
+                    : "dark"
+            );
+        }
+    );
+}
+
+
+/* ============================================================
+   AUTH SYSTEM
+   MVP / LOCAL BROWSER VERSION
+============================================================ */
+
+const authModal =
+    document.getElementById("authModal");
+
+const closeAuth =
+    document.getElementById("closeAuth");
+
+const accountButton =
+    document.getElementById("accountButton");
+
+const accountButtonText =
+    document.getElementById("accountButtonText");
+
+const accountAvatar =
+    document.getElementById("accountAvatar");
+
+const authTitle =
+    document.getElementById("authTitle");
+
+const authSubtitle =
+    document.getElementById("authSubtitle");
+
+const authSwitch =
+    document.getElementById("authSwitch");
+
+const loginForm =
+    document.getElementById("loginForm");
+
+const signupForm =
+    document.getElementById("signupForm");
+
+const loginError =
+    document.getElementById("loginError");
+
+const signupError =
+    document.getElementById("signupError");
+
+const accountMenu =
+    document.getElementById("accountMenu");
+
+const logoutButton =
+    document.getElementById("logoutButton");
+
+const menuName =
+    document.getElementById("menuName");
+
+const menuEmail =
+    document.getElementById("menuEmail");
+
+const menuAvatar =
+    document.getElementById("menuAvatar");
+
+
+let authMode = "login";
+
+
+function getUsers() {
+
+    try {
+
+        return JSON.parse(
+            localStorage.getItem(
+                "speechTrackerUsers"
+            )
+        ) || [];
+
+    } catch {
+
+        return [];
+    }
+}
+
+
+function saveUsers(users) {
+
+    localStorage.setItem(
+        "speechTrackerUsers",
+        JSON.stringify(users)
+    );
+}
+
+
+function getCurrentUser() {
+
+    try {
+
+        return JSON.parse(
+            localStorage.getItem(
+                "speechTrackerCurrentUser"
+            )
+        );
+
+    } catch {
+
+        return null;
+    }
+}
+
+
+function setCurrentUser(user) {
+
+    if (user) {
+
+        localStorage.setItem(
+            "speechTrackerCurrentUser",
+            JSON.stringify(user)
+        );
+
+    } else {
+
+        localStorage.removeItem(
+            "speechTrackerCurrentUser"
+        );
+    }
+}
+
+
+function openAuth() {
+
+    authModal.hidden = false;
+
+    accountMenu.hidden = true;
+
+    document.body.style.overflow =
+        "hidden";
+}
+
+
+function closeAuthModal() {
+
+    authModal.hidden = true;
+
+    document.body.style.overflow =
+        "";
+
+    loginError.textContent = "";
+    signupError.textContent = "";
+}
+
+
+function showLogin() {
+
+    authMode = "login";
+
+    loginForm.hidden = false;
+    signupForm.hidden = true;
+
+    authTitle.textContent =
+        "Welcome back";
+
+    authSubtitle.textContent =
+        "Log in to save and review your speeches.";
+
+    authSwitch.textContent =
+        "Don't have an account? Sign up";
+
+    loginError.textContent = "";
+    signupError.textContent = "";
+}
+
+
+function showSignup() {
+
+    authMode = "signup";
+
+    loginForm.hidden = true;
+    signupForm.hidden = false;
+
+    authTitle.textContent =
+        "Create your account";
+
+    authSubtitle.textContent =
+        "Start saving and reviewing your speaking practice.";
+
+    authSwitch.textContent =
+        "Already have an account? Log in";
+
+    loginError.textContent = "";
+    signupError.textContent = "";
+}
+
+
+function updateAccountUI() {
+
+    const user =
+        getCurrentUser();
+
+    if (!user) {
+
+        accountButtonText.textContent =
+            "Log in";
+
+        accountAvatar.textContent =
+            "?";
+
+        return;
+    }
+
+
+    const firstLetter =
+        (
+            user.name ||
+            user.email ||
+            "U"
+        )
+        .trim()
+        .charAt(0)
+        .toUpperCase();
+
+
+    accountButtonText.textContent =
+        user.name || "Account";
+
+    accountAvatar.textContent =
+        firstLetter;
+
+    menuName.textContent =
+        user.name || "User";
+
+    menuEmail.textContent =
+        user.email;
+
+    menuAvatar.textContent =
+        firstLetter;
+}
+
+
+updateAccountUI();
+
+
+accountButton.addEventListener(
+    "click",
+    () => {
+
+        const user =
+            getCurrentUser();
+
+        if (!user) {
+
+            openAuth();
+
+            showLogin();
+
+        } else {
+
+            accountMenu.hidden =
+                !accountMenu.hidden;
+        }
+    }
+);
+
+
+closeAuth.addEventListener(
+    "click",
+    closeAuthModal
+);
+
+
+authModal.addEventListener(
+    "click",
+    (event) => {
+
+        if (
+            event.target ===
+            authModal
+        ) {
+            closeAuthModal();
+        }
+    }
+);
+
+
+authSwitch.addEventListener(
+    "click",
+    () => {
+
+        if (authMode === "login") {
+
+            showSignup();
+
+        } else {
+
+            showLogin();
+        }
+    }
+);
+
+
+/* =========================
+   SIGN UP
+========================= */
+
+signupForm.addEventListener(
+    "submit",
+    (event) => {
+
+        event.preventDefault();
+
+        signupError.textContent = "";
+
+        const name =
+            document
+                .getElementById("signupName")
+                .value
+                .trim();
+
+        const email =
+            document
+                .getElementById("signupEmail")
+                .value
+                .trim()
+                .toLowerCase();
+
+        const password =
+            document
+                .getElementById("signupPassword")
+                .value;
+
+
+        const users =
+            getUsers();
+
+
+        const existingUser =
+            users.find(
+                user =>
+                    user.email === email
+            );
+
+
+        if (existingUser) {
+
+            signupError.textContent =
+                "An account with this email already exists.";
+
+            return;
+        }
+
+
+        const newUser = {
+
+            id:
+                Date.now().toString(),
+
+            name,
+
+            email,
+
+            password
+        };
+
+
+        users.push(newUser);
+
+        saveUsers(users);
+
+        setCurrentUser({
+            id: newUser.id,
+            name: newUser.name,
+            email: newUser.email
+        });
+
+
+        signupForm.reset();
+
+        closeAuthModal();
+
+        updateAccountUI();
+
+        loadSavedSpeeches();
+    }
+);
+
+
+/* =========================
+   LOGIN
+========================= */
+
+loginForm.addEventListener(
+    "submit",
+    (event) => {
+
+        event.preventDefault();
+
+        loginError.textContent = "";
+
+        const email =
+            document
+                .getElementById("loginEmail")
+                .value
+                .trim()
+                .toLowerCase();
+
+        const password =
+            document
+                .getElementById("loginPassword")
+                .value;
+
+
+        const users =
+            getUsers();
+
+
+        const user =
+            users.find(
+                item =>
+                    item.email === email &&
+                    item.password === password
+            );
+
+
+        if (!user) {
+
+            loginError.textContent =
+                "Incorrect email or password.";
+
+            return;
+        }
+
+
+        setCurrentUser({
+
+            id: user.id,
+
+            name: user.name,
+
+            email: user.email
+
+        });
+
+
+        loginForm.reset();
+
+        closeAuthModal();
+
+        updateAccountUI();
+
+        loadSavedSpeeches();
+    }
+);
+
+
+/* =========================
+   LOG OUT
+========================= */
+
+logoutButton.addEventListener(
+    "click",
+    () => {
+
+        setCurrentUser(null);
+
+        accountMenu.hidden = true;
+
+        updateAccountUI();
+
+        loadSavedSpeeches();
+    }
+);
+
+
+/* ============================================================
+   SAVED SPEECHES
+============================================================ */
+
+const saveSpeechButton =
+    document.getElementById(
+        "saveSpeechButton"
+    );
+
+const speechTitle =
+    document.getElementById(
+        "speechTitle"
+    );
+
+const saveStatus =
+    document.getElementById(
+        "saveStatus"
+    );
+
+const pastSpeeches =
+    document.getElementById(
+        "pastSpeeches"
+    );
+
+const speechCount =
+    document.getElementById(
+        "speechCount"
+    );
+
+
+function getSavedSpeeches() {
+
+    const user =
+        getCurrentUser();
+
+    if (!user) {
+        return [];
+    }
+
+
+    try {
+
+        const all =
+            JSON.parse(
+                localStorage.getItem(
+                    "speechTrackerSpeeches"
+                )
+            ) || {};
+
+
+        return all[user.id] || [];
+
+    } catch {
+
+        return [];
+    }
+}
+
+
+function saveSpeechData(speech) {
+
+    const user =
+        getCurrentUser();
+
+    if (!user) {
+        return false;
+    }
+
+
+    let all = {};
+
+    try {
+
+        all =
+            JSON.parse(
+                localStorage.getItem(
+                    "speechTrackerSpeeches"
+                )
+            ) || {};
+
+    } catch {
+
+        all = {};
+    }
+
+
+    if (!all[user.id]) {
+        all[user.id] = [];
+    }
+
+
+    all[user.id].unshift(
+        speech
+    );
+
+
+    localStorage.setItem(
+        "speechTrackerSpeeches",
+        JSON.stringify(all)
+    );
+
+
+    return true;
+}
+
+
+function loadSavedSpeeches() {
+
+    if (!pastSpeeches) {
+        return;
+    }
+
+
+    const user =
+        getCurrentUser();
+
+
+    if (!user) {
+
+        pastSpeeches.innerHTML = `
+            <div class="empty-history">
+                Log in and save a speech to see it here.
+            </div>
+        `;
+
+        if (speechCount) {
+            speechCount.textContent = "0";
+        }
+
+        return;
+    }
+
+
+    const speeches =
+        getSavedSpeeches();
+
+
+    if (speechCount) {
+        speechCount.textContent =
+            speeches.length;
+    }
+
+
+    if (speeches.length === 0) {
+
+        pastSpeeches.innerHTML = `
+            <div class="empty-history">
+                You haven't saved any speeches yet.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    pastSpeeches.innerHTML =
+        speeches
+            .map(
+                speech => `
+
+                <div class="speech-item">
+
+                    <div>
+
+                        <div class="speech-item-title">
+                            ${escapeHTML(
+                                speech.title
+                            )}
+                        </div>
+
+                        <div class="speech-item-date">
+                            ${new Date(
+                                speech.date
+                            ).toLocaleString()}
+                        </div>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        data-speech-id="${speech.id}"
+                        class="view-speech"
+                    >
+                        View
+                    </button>
+
+                </div>
+            `
+            )
+            .join("");
+
+
+    document
+        .querySelectorAll(
+            ".view-speech"
+        )
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        viewSavedSpeech(
+                            button.dataset.speechId
+                        );
+                    }
+                );
+            }
+        );
+}
+
+
+function escapeHTML(value) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+function viewSavedSpeech(id) {
+
+    const speeches =
+        getSavedSpeeches();
+
+
+    const speech =
+        speeches.find(
+            item =>
+                item.id === id
+        );
+
+
+    if (!speech) {
+        return;
+    }
+
+
+    const transcript =
+        document.getElementById(
+            "transcriptSection"
+        );
+
+
+    const analysis =
+        document.getElementById(
+            "analysis"
+        );
+
+
+    if (transcript) {
+
+        transcript.innerHTML =
+            escapeHTML(
+                speech.transcript ||
+                "No transcript saved."
+            );
+    }
+
+
+    if (analysis) {
+
+        analysis.textContent =
+            speech.analysis ||
+            "No analysis saved.";
+    }
+
+
+    window.scrollTo({
+        top:
+            transcript
+                ? transcript.offsetTop - 100
+                : 0,
+
+        behavior:
+            "smooth"
+    });
+}
+
+
+if (saveSpeechButton) {
+
+    saveSpeechButton.addEventListener(
+        "click",
+        () => {
+
+            saveStatus.textContent = "";
+
+            const user =
+                getCurrentUser();
+
+
+            if (!user) {
+
+                openAuth();
+
+                showLogin();
+
+                saveStatus.textContent =
+                    "Log in first to save speeches.";
+
+                return;
+            }
+
+
+            const transcriptElement =
+                document.getElementById(
+                    "transcriptSection"
+                );
+
+            const analysisElement =
+                document.getElementById(
+                    "analysis"
+                );
+
+
+            const transcript =
+                transcriptElement
+                    ? transcriptElement.innerText.trim()
+                    : "";
+
+
+            const analysis =
+                analysisElement
+                    ? analysisElement.innerText.trim()
+                    : "";
+
+
+            if (
+                !transcript ||
+                transcript ===
+                    "Your transcript will appear here."
+            ) {
+
+                saveStatus.textContent =
+                    "Record a speech before saving it.";
+
+                return;
+            }
+
+
+            const title =
+                speechTitle.value.trim() ||
+                `Speech — ${new Date().toLocaleDateString()}`;
+
+
+            const saved =
+                saveSpeechData({
+
+                    id:
+                        Date.now().toString(),
+
+                    title,
+
+                    transcript,
+
+                    analysis,
+
+                    date:
+                        new Date().toISOString()
+
+                });
+
+
+            if (!saved) {
+
+                openAuth();
+
+                showLogin();
+
+                return;
+            }
+
+
+            speechTitle.value = "";
+
+            saveStatus.textContent =
+                "✓ Speech saved successfully.";
+
+            loadSavedSpeeches();
+        }
+    );
+}
+
+
+loadSavedSpeeches();
+
+
+/* ============================================================
+   CLOSE ACCOUNT MENU WHEN CLICKING OUTSIDE
+============================================================ */
+
+document.addEventListener(
+    "click",
+    event => {
+
+        if (
+            !accountMenu.hidden &&
+            !accountMenu.contains(event.target) &&
+            !accountButton.contains(event.target)
+        ) {
+
+            accountMenu.hidden = true;
+        }
+    }
+);
