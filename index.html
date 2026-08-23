@@ -40,13 +40,21 @@
 
 <body>
 
-    <!-- TOP BAR -->
+    <!-- =========================================
+         TOP BAR
+    ========================================== -->
 
     <div class="top-bar">
 
         <div class="brand-mini">
-            <img src="icon.svg" alt="Speech Tracker">
-            <span>Speech Tracker</span>
+            <img
+                src="icon.svg"
+                alt="Speech Tracker"
+            >
+
+            <span>
+                Speech Tracker
+            </span>
         </div>
 
         <button
@@ -61,16 +69,24 @@
     </div>
 
 
-    <!-- MAIN APP -->
+    <!-- =========================================
+         MAIN APP
+    ========================================== -->
 
     <main class="app">
 
-        <!-- HERO -->
+
+        <!-- =====================================
+             HERO
+        ====================================== -->
 
         <header class="hero">
 
             <div class="hero-icon">
-                <img src="icon.svg" alt="">
+                <img
+                    src="icon.svg"
+                    alt=""
+                >
             </div>
 
             <div class="hero-copy">
@@ -94,15 +110,29 @@
         </header>
 
 
-        <!-- SCROLL INDICATOR -->
+        <!-- =====================================
+             SCROLL INDICATOR
+        ====================================== -->
 
-        <div class="scroll-indicator" id="scrollIndicator">
-            <span>Scroll to start</span>
-            <span class="scroll-arrow">↓</span>
+        <div
+            class="scroll-indicator"
+            id="scrollIndicator"
+        >
+
+            <span>
+                Scroll to start
+            </span>
+
+            <span class="scroll-arrow">
+                ↓
+            </span>
+
         </div>
 
 
-        <!-- RECORDING -->
+        <!-- =====================================
+             RECORDING
+        ====================================== -->
 
         <section class="card recording-card">
 
@@ -131,15 +161,21 @@
             </div>
 
 
+            <!-- LIVE TRANSCRIPT -->
+
             <div
                 id="heard"
                 class="live-transcript"
             >
+
                 <span class="empty-state">
                     Tap <strong>Listen</strong> and start speaking.
                 </span>
+
             </div>
 
+
+            <!-- RECORDING BUTTONS -->
 
             <div class="record-buttons">
 
@@ -148,9 +184,15 @@
                     class="button primary-button"
                     type="button"
                 >
-                    <span>🎤</span>
+
+                    <span>
+                        🎤
+                    </span>
+
                     Listen
+
                 </button>
+
 
                 <button
                     id="stopButton"
@@ -158,12 +200,19 @@
                     type="button"
                     disabled
                 >
-                    <span>■</span>
+
+                    <span>
+                        ■
+                    </span>
+
                     Stop
+
                 </button>
 
             </div>
 
+
+            <!-- LIVE STATUS -->
 
             <div class="live-note">
 
@@ -178,7 +227,9 @@
         </section>
 
 
-        <!-- SAVE PROMPT -->
+        <!-- =====================================
+             SAVE PROMPT
+        ====================================== -->
 
         <section
             id="savePrompt"
@@ -200,6 +251,7 @@
 
                 </div>
 
+
                 <div class="save-actions">
 
                     <button
@@ -210,6 +262,7 @@
                     >
                         ✓
                     </button>
+
 
                     <button
                         id="discardSpeechButton"
@@ -227,7 +280,9 @@
         </section>
 
 
-        <!-- STATS -->
+        <!-- =====================================
+             SPEECH STATS
+        ====================================== -->
 
         <section class="card">
 
@@ -250,6 +305,9 @@
 
             <div class="stats-grid">
 
+
+                <!-- FILLER COUNT -->
+
                 <div class="stat-card">
 
                     <div
@@ -265,6 +323,8 @@
 
                 </div>
 
+
+                <!-- WORD COUNT -->
 
                 <div class="stat-card">
 
@@ -286,7 +346,9 @@
         </section>
 
 
-        <!-- WORDS -->
+        <!-- =====================================
+             CUSTOM WORDS
+        ====================================== -->
 
         <section class="card">
 
@@ -306,6 +368,7 @@
 
             </div>
 
+
             <p class="description">
                 Add words or phrases you want Speech Tracker
                 to detect.
@@ -320,6 +383,7 @@
                     placeholder="e.g. basically"
                     autocomplete="off"
                 >
+
 
                 <button
                     id="addWordButton"
@@ -349,7 +413,9 @@
         </section>
 
 
-        <!-- DEFAULT WORDS -->
+        <!-- =====================================
+             DEFAULT WORDS
+        ====================================== -->
 
         <section class="card">
 
@@ -372,22 +438,50 @@
 
             <div class="default-word-grid">
 
-                <span>um</span>
-                <span>uh</span>
-                <span>umm</span>
-                <span>uhh</span>
-                <span>like</span>
-                <span>you know</span>
-                <span>basically</span>
-                <span>literally</span>
-                <span>actually</span>
+                <span>
+                    um
+                </span>
+
+                <span>
+                    uh
+                </span>
+
+                <span>
+                    umm
+                </span>
+
+                <span>
+                    uhh
+                </span>
+
+                <span>
+                    like
+                </span>
+
+                <span>
+                    you know
+                </span>
+
+                <span>
+                    basically
+                </span>
+
+                <span>
+                    literally
+                </span>
+
+                <span>
+                    actually
+                </span>
 
             </div>
 
         </section>
 
 
-        <!-- NOTIFICATIONS -->
+        <!-- =====================================
+             NOTIFICATIONS
+        ====================================== -->
 
         <section class="card">
 
@@ -404,6 +498,7 @@
                     </h2>
 
                 </div>
+
 
                 <span class="section-icon">
                     🔔
@@ -437,7 +532,9 @@
         </section>
 
 
-        <!-- AI -->
+        <!-- =====================================
+             AI SPEECH ANALYSIS
+        ====================================== -->
 
         <section class="card ai-card">
 
@@ -460,6 +557,7 @@
 
                 </div>
 
+
                 <span class="ai-badge">
                     AI
                 </span>
@@ -477,15 +575,24 @@
             </button>
 
 
+            <!-- ANALYSIS LOADING -->
+
             <div
                 id="analysisLoading"
                 class="analysis-loading"
                 hidden
             >
+
                 <span class="loading-spinner"></span>
-                <span>Analyzing your speech...</span>
+
+                <span>
+                    Analyzing your speech...
+                </span>
+
             </div>
 
+
+            <!-- ANALYSIS OUTPUT -->
 
             <div
                 id="analysis"
@@ -495,7 +602,9 @@
         </section>
 
 
-        <!-- SAVED SPEECHES -->
+        <!-- =====================================
+             SAVED SPEECHES
+        ====================================== -->
 
         <section class="card">
 
@@ -512,6 +621,7 @@
                     </h2>
 
                 </div>
+
 
                 <span
                     id="savedSpeechCount"
@@ -537,7 +647,9 @@
         </section>
 
 
-        <!-- CURRENT TRANSCRIPT -->
+        <!-- =====================================
+             CURRENT TRANSCRIPT
+        ====================================== -->
 
         <section class="card transcript-card">
 
@@ -568,7 +680,9 @@
         </section>
 
 
-        <!-- HOW IT WORKS -->
+        <!-- =====================================
+             HOW IT WORKS
+        ====================================== -->
 
         <section class="card">
 
@@ -591,75 +705,121 @@
 
             <div class="steps">
 
+
+                <!-- STEP 1 -->
+
                 <div class="step">
 
-                    <span>1</span>
+                    <span>
+                        1
+                    </span>
 
                     <div>
-                        <strong>Listen</strong>
+
+                        <strong>
+                            Listen
+                        </strong>
+
                         <p>
                             Start a speech and talk normally.
                         </p>
+
                     </div>
 
                 </div>
 
 
+                <!-- STEP 2 -->
+
                 <div class="step">
 
-                    <span>2</span>
+                    <span>
+                        2
+                    </span>
 
                     <div>
-                        <strong>Detect</strong>
+
+                        <strong>
+                            Detect
+                        </strong>
+
                         <p>
                             Filler words are detected while
                             you speak.
                         </p>
+
                     </div>
 
                 </div>
 
 
+                <!-- STEP 3 -->
+
                 <div class="step">
 
-                    <span>3</span>
+                    <span>
+                        3
+                    </span>
 
                     <div>
-                        <strong>Review</strong>
+
+                        <strong>
+                            Review
+                        </strong>
+
                         <p>
                             Stop the recording to get the
                             completed transcript.
                         </p>
+
                     </div>
 
                 </div>
 
 
+                <!-- STEP 4 -->
+
                 <div class="step">
 
-                    <span>4</span>
+                    <span>
+                        4
+                    </span>
 
                     <div>
-                        <strong>Analyze</strong>
+
+                        <strong>
+                            Analyze
+                        </strong>
+
                         <p>
                             AI gives specific feedback about
                             your speech.
                         </p>
+
                     </div>
 
                 </div>
 
 
+                <!-- STEP 5 -->
+
                 <div class="step">
 
-                    <span>5</span>
+                    <span>
+                        5
+                    </span>
 
                     <div>
-                        <strong>Improve</strong>
+
+                        <strong>
+                            Improve
+                        </strong>
+
                         <p>
                             Save speeches and compare your
                             progress over time.
                         </p>
+
                     </div>
 
                 </div>
@@ -669,16 +829,28 @@
         </section>
 
 
+        <!-- =====================================
+             FOOTER
+        ====================================== -->
+
         <footer>
+
             Speech Tracker
-            <span>•</span>
+
+            <span>
+                •
+            </span>
+
             AI Speech Practice
+
         </footer>
 
     </main>
 
 
-    <!-- SAVE NAME MODAL -->
+    <!-- =========================================
+         SAVE NAME MODAL
+    ========================================== -->
 
     <div
         id="saveModal"
@@ -692,9 +864,11 @@
                 Save Speech
             </div>
 
+
             <div class="modal-description">
                 Give this speech a name so you can find it later.
             </div>
+
 
             <input
                 id="speechNameInput"
@@ -702,6 +876,7 @@
                 placeholder="e.g. Science Presentation"
                 maxlength="80"
             >
+
 
             <div class="modal-buttons">
 
@@ -712,6 +887,7 @@
                 >
                     Cancel
                 </button>
+
 
                 <button
                     id="confirmSaveButton"
@@ -727,6 +903,10 @@
 
     </div>
 
+
+    <!-- =========================================
+         JAVASCRIPT
+    ========================================== -->
 
     <script src="script.js"></script>
 
