@@ -1,50 +1,274 @@
+/* =========================================================
+   SPEECH TRACKER
+   api/analyze.js
+
+   AI speech analysis endpoint.
+
+   IMPORTANT:
+   - NEVER put the API key in this file.
+   - OPENAI_API_KEY must be stored in Vercel Environment
+     Variables.
+   ========================================================= */
+
 export default async function handler(req, res) {
+
+    /* =====================================================
+       METHOD
+       ===================================================== */
+
     if (req.method !== "POST") {
+
         return res.status(405).json({
             error: "Method not allowed"
         });
+
     }
 
-    try {
-        /* =====================================================
-           API KEY
-           ===================================================== */
 
-        const apiKey = process.env.OPENAI_API_KEY;
+    try {
+
+        /* =================================================
+           API KEY
+           ================================================= */
+
+        const apiKey =
+            process.env.OPENAI_API_KEY;
+
 
         if (!apiKey) {
+
             return res.status(500).json({
-                error: "OPENAI_API_KEY is missing from Vercel."
+                error:
+                    "OPENAI_API_KEY is missing from Vercel."
             });
+
         }
 
 
-        /* =====================================================
-           TRANSCRIPT
-           ===================================================== */
+        /* =================================================
+           REQUEST BODY
+           ================================================= */
 
-        const { transcript } = req.body || {};
+        const {
+            transcript,
+            metrics
+        } = req.body || {};
+
 
         if (
+            !transcript ||
             typeof transcript !== "string" ||
             !transcript.trim()
         ) {
+
             return res.status(400).json({
-                error: "No transcript was provided."
+                error:
+                    "No transcript was provided."
             });
+
         }
 
 
-        const cleanTranscript =
-            transcript.trim().slice(0, 30000);
+        /* =================================================
+           METRICS
+           ================================================= */
+
+        const wordCount =
+            Number(
+                metrics?.wordCount || 0
+            );
 
 
-        /* =====================================================
-           STRUCTURED OUTPUT SCHEMA
-           ===================================================== */
+        const fillerCount =
+            Number(
+                metrics?.fillerCount || 0
+            );
+
+
+        const fillerRate =
+            Number(
+                metrics?.fillerRate || 0
+            );
+
+
+        const durationSeconds =
+            Number(
+                metrics?.durationSeconds || 0
+            );
+
+
+        const pacing =
+            Number(
+                metrics?.pacing || 0
+            );
+
+
+        /* =================================================
+           SYSTEM PROMPT
+           ================================================= */
+
+        const systemPrompt = `
+You are an expert public-speaking coach analyzing a real speech transcript.
+
+Your job is to provide highly specific, useful feedback based ONLY on the speech the user actually gave.
+
+Do NOT give generic public-speaking advice when the transcript provides enough information to be specific.
+
+Analyze:
+
+- filler words
+- repeated words
+- "um"
+- "umm"
+- "uh"
+- "uhh"
+- "like"
+- "you know"
+- unnecessary phrases
+- rambling
+- sentence length
+- unclear wording
+- vague statements
+- grammar
+- transitions
+- organization
+- conciseness
+- clarity
+- strengths
+- areas for improvement
+
+IMPORTANT FILLER RULE:
+
+Only discuss filler words that actually appear in the transcript.
+
+If "um", "umm", "uh", or "uhh" appear, specifically discuss them.
+
+Do not invent filler words.
+
+IMPORTANT METRICS RULE:
+
+The application has already calculated:
+
+- word count
+- filler count
+- filler rate
+- speech duration
+- speaking pace
+
+Use these values exactly.
+
+Do NOT invent different values.
+
+Filler rate means:
+
+filler words / total words × 100
+
+Speaking pace means:
+
+words per minute
+
+The AI should explain what these numbers mean and whether they appear reasonable for the speech.
+
+GRAMMAR:
+
+Analyze the actual grammar in the transcript.
+
+Identify concrete issues such as:
+
+- incomplete sentences
+- awkward phrasing
+- incorrect word usage
+- repetitive sentence structures
+- unclear pronouns
+- overly complicated sentences
+- grammar mistakes
+
+Do not claim grammar mistakes exist if the transcript does not support that conclusion.
+
+SPEECH SECTIONS:
+
+Break the speech into its actual logical sections.
+
+For example, if the speech contains:
+
+1. Introduction
+2. Main argument
+3. Example
+4. Explanation
+5. Conclusion
+
+analyze those sections individually.
+
+Do NOT invent sections that are not reasonably present.
+
+For every section explain:
+
+- what the speaker was trying to communicate
+- what worked
+- what could be clearer
+- what could be improved
+
+OVERALL FEEDBACK:
+
+Give a concise but specific overview of the speech.
+
+The improvement section should identify the most important thing the speaker should work on.
+
+TIPS:
+
+Provide several practical tips specifically connected to this speech.
+
+Avoid generic advice.
+
+For example, instead of:
+
+"Try to reduce filler words."
+
+say:
+
+"You repeatedly use 'umm' before introducing your second point. Replace that hesitation with a short silent pause before starting the sentence."
+
+Return ONLY valid JSON matching the requested structure.
+`;
+
+
+        /* =================================================
+           USER PROMPT
+           ================================================= */
+
+        const userPrompt = `
+Analyze this speech.
+
+TRANSCRIPT:
+${transcript}
+
+CALCULATED METRICS:
+
+Word count:
+${wordCount}
+
+Filler count:
+${fillerCount}
+
+Filler rate:
+${fillerRate}%
+
+Duration:
+${durationSeconds} seconds
+
+Speaking pace:
+${pacing} words per minute
+`;
+
+
+        /* =================================================
+           JSON SCHEMA
+           ================================================= */
 
         const schema = {
+
             type: "object",
+
             additionalProperties: false,
 
             properties: {
@@ -53,8 +277,57 @@ export default async function handler(req, res) {
                     type: "string"
                 },
 
-                fillerWords: {
+
+                metrics: {
+
                     type: "object",
+
+                    additionalProperties: false,
+
+                    properties: {
+
+                        wordCount: {
+                            type: "integer"
+                        },
+
+                        fillerCount: {
+                            type: "integer"
+                        },
+
+                        fillerRate: {
+                            type: "string"
+                        },
+
+                        pacing: {
+                            type: "string"
+                        },
+
+                        duration: {
+                            type: "string"
+                        },
+
+                        interpretation: {
+                            type: "string"
+                        }
+
+                    },
+
+                    required: [
+                        "wordCount",
+                        "fillerCount",
+                        "fillerRate",
+                        "pacing",
+                        "duration",
+                        "interpretation"
+                    ]
+
+                },
+
+
+                fillerWords: {
+
+                    type: "object",
+
                     additionalProperties: false,
 
                     properties: {
@@ -64,14 +337,21 @@ export default async function handler(req, res) {
                         },
 
                         detected: {
+
                             type: "array",
+
                             items: {
                                 type: "string"
                             }
+
                         },
 
                         count: {
                             type: "integer"
+                        },
+
+                        rate: {
+                            type: "string"
                         },
 
                         feedback: {
@@ -84,16 +364,89 @@ export default async function handler(req, res) {
                         "summary",
                         "detected",
                         "count",
+                        "rate",
                         "feedback"
                     ]
+
+                },
+
+
+                pacing: {
+
+                    type: "object",
+
+                    additionalProperties: false,
+
+                    properties: {
+
+                        wordsPerMinute: {
+                            type: "number"
+                        },
+
+                        assessment: {
+                            type: "string"
+                        },
+
+                        feedback: {
+                            type: "string"
+                        }
+
+                    },
+
+                    required: [
+                        "wordsPerMinute",
+                        "assessment",
+                        "feedback"
+                    ]
+
+                },
+
+
+                grammar: {
+
+                    type: "object",
+
+                    additionalProperties: false,
+
+                    properties: {
+
+                        assessment: {
+                            type: "string"
+                        },
+
+                        issues: {
+
+                            type: "array",
+
+                            items: {
+                                type: "string"
+                            }
+
+                        },
+
+                        feedback: {
+                            type: "string"
+                        }
+
+                    },
+
+                    required: [
+                        "assessment",
+                        "issues",
+                        "feedback"
+                    ]
+
                 },
 
 
                 speechSections: {
+
                     type: "array",
 
                     items: {
+
                         type: "object",
+
                         additionalProperties: false,
 
                         properties: {
@@ -122,7 +475,9 @@ export default async function handler(req, res) {
                             "strengths",
                             "improvements"
                         ]
+
                     }
+
                 },
 
 
@@ -130,20 +485,27 @@ export default async function handler(req, res) {
                     type: "string"
                 },
 
+
                 strength: {
                     type: "string"
                 },
+
 
                 improvement: {
                     type: "string"
                 },
 
+
                 tips: {
+
                     type: "array",
+
                     items: {
                         type: "string"
                     }
+
                 },
+
 
                 tip: {
                     type: "string"
@@ -153,7 +515,10 @@ export default async function handler(req, res) {
 
             required: [
                 "overall",
+                "metrics",
                 "fillerWords",
+                "pacing",
+                "grammar",
                 "speechSections",
                 "clarity",
                 "strength",
@@ -161,197 +526,114 @@ export default async function handler(req, res) {
                 "tips",
                 "tip"
             ]
+
         };
 
 
-        /* =====================================================
+        /* =================================================
            OPENAI REQUEST
-           ===================================================== */
+           ================================================= */
 
-        const response = await fetch(
-            "https://api.openai.com/v1/responses",
-            {
-                method: "POST",
+        const response =
+            await fetch(
+                "https://api.openai.com/v1/responses",
+                {
 
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${apiKey}`
-                },
+                    method: "POST",
 
-                body: JSON.stringify({
+                    headers: {
 
-                    model: "gpt-5.6-luna",
+                        "Content-Type":
+                            "application/json",
 
-                    input: [
+                        "Authorization":
+                            `Bearer ${apiKey}`
 
-                        {
-                            role: "system",
+                    },
 
-                            content: [
+                    body:
+                        JSON.stringify({
+
+                            model:
+                                "gpt-4o-mini",
+
+                            input: [
+
                                 {
-                                    type: "input_text",
+                                    role: "system",
 
-                                    text: `
-You are Speech Tracker's expert public-speaking coach.
+                                    content: [
+                                        {
+                                            type:
+                                                "input_text",
 
-Analyze ONLY the speech transcript provided by the user.
+                                            text:
+                                                systemPrompt
+                                        }
+                                    ]
+                                },
 
-Your feedback must be specific to what the speaker actually said.
-
-Do NOT give generic public-speaking advice when the transcript
-provides enough information to be specific.
-
-Pay especially close attention to:
-
-- um
-- umm
-- ummmm
-- uh
-- uhh
-- uhhhh
-- like
-- you know
-- basically
-- literally
-- actually
-- repeated words
-- repeated ideas
-- unnecessary phrases
-- rambling
-- sentence structure
-- unclear wording
-- vague claims
-- weak transitions
-- organization
-- conciseness
-- strengths
-- specific opportunities for improvement
-
-IMPORTANT FILLER RULE:
-
-Only report filler words that actually appear in the transcript.
-
-Do not invent filler words.
-
-If the transcript contains "umm", "ummm", "uhh", or similar
-variants, explicitly mention those variants.
-
-For example, if the speaker repeatedly says "umm" before
-explaining points, explain that specifically.
-
-Do not simply say:
-
-"Reduce filler words."
-
-Instead say something specific such as:
-
-"You use 'umm' several times before introducing new ideas.
-Try replacing those moments with a short silent pause."
-
-Analyze the actual structure of the speech.
-
-If the transcript has recognizable sections such as:
-
-- introduction
-- claim
-- argument
-- example
-- explanation
-- conclusion
-
-analyze those sections individually.
-
-Do NOT invent sections that are not reasonably present.
-
-For each section explain:
-
-1. What the speaker was trying to communicate.
-2. What worked.
-3. What could be clearer.
-4. What could be improved.
-
-The overall feedback should identify the most important thing
-the speaker should work on.
-
-The tips should be practical and specific to THIS speech.
-
-Return ONLY the requested structured output.
-`
-                                }
-                            ]
-                        },
-
-                        {
-                            role: "user",
-
-                            content: [
                                 {
-                                    type: "input_text",
+                                    role: "user",
 
-                                    text:
-                                        `Analyze this speech transcript:\n\n${cleanTranscript}`
+                                    content: [
+                                        {
+                                            type:
+                                                "input_text",
+
+                                            text:
+                                                userPrompt
+                                        }
+                                    ]
                                 }
-                            ]
-                        }
 
-                    ],
+                            ],
 
-                    text: {
-                        format: {
-                            type: "json_schema",
+                            text: {
 
-                            name: "speech_analysis",
+                                format: {
 
-                            strict: true,
+                                    type:
+                                        "json_schema",
 
-                            schema
-                        }
-                    }
-                })
-            }
-        );
+                                    name:
+                                        "speech_analysis",
+
+                                    strict:
+                                        true,
+
+                                    schema
+
+                                }
+
+                            }
+
+                        })
+
+                }
+            );
 
 
-        /* =====================================================
-           READ OPENAI RESPONSE
-           ===================================================== */
+        /* =================================================
+           READ RESPONSE
+           ================================================= */
 
         const responseText =
             await response.text();
+
 
         console.log(
             "OpenAI analysis status:",
             response.status
         );
 
-        console.log(
-            "OpenAI raw response:",
-            responseText
-        );
-
-
-        /* =====================================================
-           OPENAI ERROR
-           ===================================================== */
 
         if (!response.ok) {
 
-            let errorDetails =
-                responseText;
-
-            try {
-
-                const errorJSON =
-                    JSON.parse(responseText);
-
-                errorDetails =
-                    errorJSON?.error?.message ||
-                    errorJSON?.error ||
-                    responseText;
-
-            } catch (_) {
-                // Keep original response text.
-            }
+            console.error(
+                "OpenAI analysis error:",
+                responseText
+            );
 
 
             return res.status(
@@ -362,23 +644,26 @@ Return ONLY the requested structured output.
                     "OpenAI analysis failed.",
 
                 details:
-                    String(errorDetails)
+                    responseText
 
             });
 
         }
 
 
-        /* =====================================================
+        /* =================================================
            PARSE RESPONSE
-           ===================================================== */
+           ================================================= */
 
         let data;
+
 
         try {
 
             data =
-                JSON.parse(responseText);
+                JSON.parse(
+                    responseText
+                );
 
         } catch (error) {
 
@@ -387,51 +672,61 @@ Return ONLY the requested structured output.
                 error
             );
 
+
             return res.status(500).json({
 
                 error:
                     "OpenAI returned invalid JSON.",
 
                 details:
-                    responseText.slice(0, 3000)
+                    responseText
 
             });
 
         }
 
 
-        /* =====================================================
+        /* =================================================
            GET OUTPUT TEXT
-           ===================================================== */
+           ================================================= */
 
         let content =
             data?.output_text;
 
 
         /*
-            Some Responses API responses may not expose
-            output_text in the exact form expected, so also
-            search the output structure.
+           Some Responses API responses can expose
+           the generated text through the output array.
         */
 
-        if (!content && Array.isArray(data?.output)) {
+        if (
+            !content &&
+            Array.isArray(data?.output)
+        ) {
 
             for (
-                const item of data.output
+                const item
+                of data.output
             ) {
 
                 if (
-                    item?.type === "message" &&
-                    Array.isArray(item.content)
+                    item?.type ===
+                        "message" &&
+                    Array.isArray(
+                        item.content
+                    )
                 ) {
 
                     for (
-                        const part of item.content
+                        const part
+                        of item.content
                     ) {
 
                         if (
-                            part?.type === "output_text" &&
-                            typeof part.text === "string"
+                            part?.type ===
+                                "output_text" &&
+                            typeof part.text ===
+                                "string"
                         ) {
 
                             content =
@@ -456,43 +751,45 @@ Return ONLY the requested structured output.
 
         if (!content) {
 
-            console.error(
-                "OpenAI returned no output text:",
-                JSON.stringify(data)
-            );
-
             return res.status(500).json({
 
                 error:
                     "OpenAI returned no analysis content.",
 
                 details:
-                    JSON.stringify(data).slice(0, 5000)
+                    JSON.stringify(data)
 
             });
 
         }
 
 
-        /* =====================================================
+        /* =================================================
            PARSE STRUCTURED JSON
-           ===================================================== */
+           ================================================= */
 
         let analysis;
+
 
         try {
 
             analysis =
-                typeof content === "string"
-                    ? JSON.parse(content)
+                typeof content ===
+                    "string"
+
+                    ? JSON.parse(
+                        content
+                    )
+
                     : content;
 
         } catch (error) {
 
             console.error(
-                "Could not parse AI analysis:",
+                "Could not parse structured analysis:",
                 error
             );
+
 
             return res.status(500).json({
 
@@ -500,21 +797,20 @@ Return ONLY the requested structured output.
                     "The AI analysis JSON was invalid.",
 
                 details:
-                    String(content).slice(0, 5000)
+                    content
 
             });
 
         }
 
 
-        /* =====================================================
+        /* =================================================
            VALIDATE
-           ===================================================== */
+           ================================================= */
 
         if (
             !analysis ||
-            typeof analysis !== "object" ||
-            Array.isArray(analysis)
+            typeof analysis !== "object"
         ) {
 
             return res.status(500).json({
@@ -527,55 +823,129 @@ Return ONLY the requested structured output.
         }
 
 
-        /* =====================================================
-           NORMALIZE
-           ===================================================== */
+        /* =================================================
+           NORMALIZE METRICS
+           ================================================= */
+
+        const normalizedMetrics = {
+
+            wordCount:
+                wordCount,
+
+            fillerCount:
+                fillerCount,
+
+            fillerRate:
+                `${fillerRate.toFixed(2)}%`,
+
+            pacing:
+                `${pacing.toFixed(1)} words/min`,
+
+            duration:
+                `${durationSeconds.toFixed(1)} seconds`,
+
+            interpretation:
+                analysis?.metrics
+                    ?.interpretation ||
+                ""
+
+        };
+
+
+        /* =================================================
+           NORMALIZE ANALYSIS
+           ================================================= */
 
         const analysisData = {
 
             overall:
-                typeof analysis.overall === "string"
+                typeof analysis.overall ===
+                    "string"
                     ? analysis.overall
                     : "",
 
 
+            metrics:
+                normalizedMetrics,
+
+
             fillerWords:
                 analysis.fillerWords &&
-                typeof analysis.fillerWords === "object"
+                typeof analysis.fillerWords ===
+                    "object"
 
                     ? {
 
-                        summary:
-                            typeof analysis.fillerWords.summary === "string"
-                                ? analysis.fillerWords.summary
-                                : "",
-
-                        detected:
-                            Array.isArray(
-                                analysis.fillerWords.detected
-                            )
-                                ? analysis.fillerWords.detected
-                                : [],
+                        ...analysis.fillerWords,
 
                         count:
-                            Number.isInteger(
-                                analysis.fillerWords.count
-                            )
-                                ? analysis.fillerWords.count
-                                : 0,
+                            fillerCount,
 
-                        feedback:
-                            typeof analysis.fillerWords.feedback === "string"
-                                ? analysis.fillerWords.feedback
-                                : ""
+                        rate:
+                            `${fillerRate.toFixed(2)}%`
 
                     }
 
                     : {
 
                         summary: "",
+
                         detected: [],
-                        count: 0,
+
+                        count:
+                            fillerCount,
+
+                        rate:
+                            `${fillerRate.toFixed(2)}%`,
+
+                        feedback: ""
+
+                    },
+
+
+            pacing:
+                analysis.pacing &&
+                typeof analysis.pacing ===
+                    "object"
+
+                    ? {
+
+                        ...analysis.pacing,
+
+                        wordsPerMinute:
+                            Number(
+                                pacing.toFixed(1)
+                            )
+
+                    }
+
+                    : {
+
+                        wordsPerMinute:
+                            Number(
+                                pacing.toFixed(1)
+                            ),
+
+                        assessment: "",
+
+                        feedback: ""
+
+                    },
+
+
+            grammar:
+                analysis.grammar &&
+                typeof analysis.grammar ===
+                    "object"
+
+                    ? analysis.grammar
+
+                    : {
+
+                        assessment: "",
+
+                        issues: [],
+
                         feedback: ""
 
                     },
@@ -585,48 +955,68 @@ Return ONLY the requested structured output.
                 Array.isArray(
                     analysis.speechSections
                 )
+
                     ? analysis.speechSections
+
                     : [],
 
 
             clarity:
-                typeof analysis.clarity === "string"
+                typeof analysis.clarity ===
+                    "string"
+
                     ? analysis.clarity
+
                     : "",
 
 
             strength:
-                typeof analysis.strength === "string"
+                typeof analysis.strength ===
+                    "string"
+
                     ? analysis.strength
+
                     : "",
 
 
             improvement:
-                typeof analysis.improvement === "string"
+                typeof analysis.improvement ===
+                    "string"
+
                     ? analysis.improvement
+
                     : "",
 
 
             tips:
-                Array.isArray(analysis.tips)
+                Array.isArray(
+                    analysis.tips
+                )
+
                     ? analysis.tips
+
                     : [],
 
 
             tip:
-                typeof analysis.tip === "string"
+                typeof analysis.tip ===
+                    "string"
+
                     ? analysis.tip
+
                     : ""
 
         };
 
 
-        /* =====================================================
+        /* =================================================
            RETURN
-           ===================================================== */
+           ================================================= */
 
         return res.status(200).json({
+
             analysisData
+
         });
 
 
@@ -637,6 +1027,7 @@ Return ONLY the requested structured output.
             error
         );
 
+
         return res.status(500).json({
 
             error:
@@ -646,4 +1037,5 @@ Return ONLY the requested structured output.
         });
 
     }
+
 }
