@@ -176,3 +176,6 @@ The longer-term goal is to combine real-time feedback with
 detailed AI analysis so users can identify patterns in their
 speech and gradually become clearer, more concise, and more
 confident speakers.
+
+Thanks,
+Ayan M. and Rohit A.
