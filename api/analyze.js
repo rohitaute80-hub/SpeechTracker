@@ -343,7 +343,7 @@ ${pacing} words per minute
                             items: {
                                 type: "string"
                             }
-
+                        
                         },
 
                         count: {
